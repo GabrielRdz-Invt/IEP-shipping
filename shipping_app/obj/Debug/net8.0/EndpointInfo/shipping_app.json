@@ -1,0 +1,273 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "shipping_app",
+    "version": "1.0"
+  },
+  "paths": {
+    "/api/IepCrossingDockShipments": {
+      "get": {
+        "tags": [
+          "IepCrossingDockShipments"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IepCrossingDockShipment"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IepCrossingDockShipment"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IepCrossingDockShipment"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/IepCrossingDockShipments/{id}": {
+      "get": {
+        "tags": [
+          "IepCrossingDockShipments"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IepCrossingDockShipment"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IepCrossingDockShipment"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IepCrossingDockShipment"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/WeatherForecast": {
+      "get": {
+        "tags": [
+          "WeatherForecast"
+        ],
+        "operationId": "GetWeatherForecast",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WeatherForecast"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WeatherForecast"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WeatherForecast"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "IepCrossingDockShipment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "hawb": {
+            "type": "string",
+            "nullable": true
+          },
+          "invRefPo": {
+            "type": "string",
+            "nullable": true
+          },
+          "hpPartNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "iecPartNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "qty": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "bulks": {
+            "type": "string",
+            "nullable": true
+          },
+          "boxPlt": {
+            "type": "string",
+            "nullable": true
+          },
+          "rcvdDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "carrier": {
+            "type": "string",
+            "nullable": true
+          },
+          "shipper": {
+            "type": "string",
+            "nullable": true
+          },
+          "bin": {
+            "type": "string",
+            "nullable": true
+          },
+          "shipOutStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "remainQty": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "shipOutDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "truckNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "sealNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "containerNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "imxInvNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "operator": {
+            "type": "string",
+            "nullable": true
+          },
+          "cdt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "udt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "remark": {
+            "type": "string",
+            "nullable": true
+          },
+          "weight": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WeatherForecast": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "temperatureC": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "temperatureF": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          },
+          "summary": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
