@@ -8,5 +8,15 @@ namespace shipping_app.Repositories
     {
         List<IepCrossingDockShipment> GetListShippment(string _connectionString);
         List<IepCrossingDockShipment?> GetListShippmentById(string id, string connectionString);
+
+        // Insert new shipment record
+        Task<bool> InsertAsync(IepCrossingDockShipmentCreateDto dto, string connectionString);
+        Task<bool> ExistsAsync(string id, string connectionString);
+
+        // Delete shipment record by ID
+        Task<bool> DeleteAsync(string id, string connectionString);
+
+        // Update shipment status by ID
+        Task<bool> UpdateStatusWithShipOutAsync(string id, StatusUpdateDto statusUpdateDto, string connectionString);
     }
 }

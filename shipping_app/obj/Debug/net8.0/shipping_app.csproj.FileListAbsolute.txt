@@ -74,3 +74,4 @@ C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_a
 C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\obj\Debug\net8.0\shipping_app.pdb
 C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\obj\Debug\net8.0\shipping_app.genruntimeconfig.cache
 C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\obj\Debug\net8.0\ref\shipping_app.dll
+C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\obj\Debug\net8.0\shipping_app.sourcelink.json

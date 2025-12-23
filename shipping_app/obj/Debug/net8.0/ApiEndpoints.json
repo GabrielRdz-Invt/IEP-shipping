@@ -21,6 +21,22 @@
   },
   {
     "ContainingType": "shipping_app.Controllers.IepCrossingDockShipmentsController",
+    "Method": "Create",
+    "RelativePath": "api/IepCrossingDockShipments",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "shipping_app.Models.IepCrossingDockShipmentCreateDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "shipping_app.Controllers.IepCrossingDockShipmentsController",
     "Method": "GetById",
     "RelativePath": "api/IepCrossingDockShipments/{id}",
     "HttpMethod": "GET",
@@ -44,6 +60,43 @@
         "StatusCode": 200
       }
     ]
+  },
+  {
+    "ContainingType": "shipping_app.Controllers.IepCrossingDockShipmentsController",
+    "Method": "Delete",
+    "RelativePath": "api/IepCrossingDockShipments/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "shipping_app.Controllers.IepCrossingDockShipmentsController",
+    "Method": "ScanOut",
+    "RelativePath": "api/IepCrossingDockShipments/{id}/scanout",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "shipping_app.Models.StatusUpdateDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
   },
   {
     "ContainingType": "shipping_app.Controllers.WeatherForecastController",
