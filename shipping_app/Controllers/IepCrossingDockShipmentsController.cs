@@ -202,5 +202,41 @@ namespace shipping_app.Controllers
         }
 
 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update([FromRoute] string id, [FromBody] IepCrossingDockShipmentUpdateDto dto)
+        {
+            try
+            {
+                var idNorm = (id ?? string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(idNorm))
+                    return BadRequest("ID es requerido.");
+
+                var exists = await _repo.ExistsAsync(idNorm, _connectionString);
+                if (!exists) return NotFound($"No existe envío con ID '{idNorm}'.");
+
+                try
+                {
+                    var ok = await _repo.UpdateAsync(idNorm, dto, _connectionString);
+                    if (!ok) return StatusCode(500, "No se pudo actualizar el registro.");
+                }
+                catch (SqlException sqlEx)
+                {
+                    _logger.LogError(sqlEx, "SqlException en UPDATE");
+                    return StatusCode(500, $"SQL {sqlEx.Number}: {sqlEx.Message}");
+                }
+
+                var updated = _repo.GetListShippmentById(idNorm, _connectionString)?.FirstOrDefault();
+                return updated is not null
+                    ? Ok(updated)
+                    : Ok(dto);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error actualizando ID {id}");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
     }
 }

@@ -18,5 +18,7 @@ namespace shipping_app.Repositories
 
         // Update shipment status by ID
         Task<bool> UpdateStatusWithShipOutAsync(string id, StatusUpdateDto statusUpdateDto, string connectionString);
+
+        Task<bool> UpdateAsync(string id, IepCrossingDockShipmentUpdateDto dto, string connectionString);
     }
 }

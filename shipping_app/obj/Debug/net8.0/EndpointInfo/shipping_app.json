@@ -138,6 +138,45 @@
             "description": "OK"
           }
         }
+      },
+      "put": {
+        "tags": [
+          "IepCrossingDockShipments"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IepCrossingDockShipmentUpdateDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IepCrossingDockShipmentUpdateDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/IepCrossingDockShipmentUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/IepCrossingDockShipments/{id}/scanout": {
@@ -401,6 +440,66 @@
             "nullable": true
           },
           "hpPartNum": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "IepCrossingDockShipmentUpdateDto": {
+        "type": "object",
+        "properties": {
+          "carrier": {
+            "type": "string",
+            "nullable": true
+          },
+          "hawb": {
+            "type": "string",
+            "nullable": true
+          },
+          "invRefPo": {
+            "type": "string",
+            "nullable": true
+          },
+          "iecPartNum": {
+            "type": "string",
+            "nullable": true
+          },
+          "qty": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "bulks": {
+            "type": "string",
+            "nullable": true
+          },
+          "boxPlt": {
+            "type": "string",
+            "nullable": true
+          },
+          "rcvdDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "weight": {
+            "type": "string",
+            "nullable": true
+          },
+          "shipper": {
+            "type": "string",
+            "nullable": true
+          },
+          "bin": {
+            "type": "string",
+            "nullable": true
+          },
+          "remark": {
+            "type": "string",
+            "nullable": true
+          },
+          "operator": {
             "type": "string",
             "nullable": true
           }

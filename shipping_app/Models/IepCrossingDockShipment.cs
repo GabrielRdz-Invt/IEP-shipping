@@ -301,6 +301,52 @@ namespace shipping_app.Models
             return affected > 0;
         }
 
+        public async Task<bool> UpdateAsync(string id, IepCrossingDockShipmentUpdateDto dto, string connectionString)
+        {
+            const string sql = @"
+            UPDATE dbo.IEP_Crossing_Dock_Shipment
+            SET [CARRIER]   = @Carrier,
+                [HAWB]      = @HAWB,
+                [INVREFPO]  = @InvRefPo,
+                [IECPARTNUM]= @IecPartNum,
+                [QTY]       = @Qty,
+                [BULKS]     = @Bulks,
+                [BOXPLT]    = @BoxPlt,
+                [RCVDDATE]  = @RcvdDate,
+                [WEIGHT]    = @Weight,
+                [SHIPPER]   = @Shipper,
+                [Bin]       = @Bin,
+                [REMARK]    = @Remark,
+                [Operator]  = @Operator,
+                [Udt]       = @Udt
+                -- Opcional: [HPPARTNUM] = @HpPartNum
+            WHERE RTRIM(LTRIM([ID])) = @IdTrim;";
 
+            using var conn = new SqlConnection(connectionString);
+            await conn.OpenAsync();
+            using var cmd = new SqlCommand(sql, conn);
+
+            cmd.Parameters.Add("@IdTrim", SqlDbType.VarChar, 100).Value = (id ?? string.Empty).Trim();
+            cmd.Parameters.Add("@Carrier", SqlDbType.VarChar, 50).Value = (object?)dto.Carrier ?? DBNull.Value;
+            cmd.Parameters.Add("@HAWB", SqlDbType.VarChar, 50).Value = (object?)dto.HAWB ?? DBNull.Value;
+            cmd.Parameters.Add("@InvRefPo", SqlDbType.VarChar, 50).Value = (object?)dto.InvRefPo ?? DBNull.Value;
+            cmd.Parameters.Add("@IecPartNum", SqlDbType.VarChar, 50).Value = (object?)dto.IecPartNum ?? DBNull.Value;
+            cmd.Parameters.Add("@Qty", SqlDbType.Int).Value = (object?)dto.Qty ?? DBNull.Value;
+            cmd.Parameters.Add("@Bulks", SqlDbType.VarChar, 50).Value = (object?)dto.Bulks ?? DBNull.Value;
+            cmd.Parameters.Add("@BoxPlt", SqlDbType.VarChar, 50).Value = (object?)dto.BoxPlt ?? DBNull.Value;
+            cmd.Parameters.Add("@RcvdDate", SqlDbType.DateTime).Value = (object?)dto.RcvdDate ?? DBNull.Value;
+            cmd.Parameters.Add("@Weight", SqlDbType.VarChar, 50).Value = (object?)dto.Weight ?? DBNull.Value;
+            cmd.Parameters.Add("@Shipper", SqlDbType.VarChar, 50).Value = (object?)dto.Shipper ?? DBNull.Value;
+            cmd.Parameters.Add("@Bin", SqlDbType.VarChar, 50).Value = (object?)dto.Bin ?? DBNull.Value;
+            cmd.Parameters.Add("@Remark", SqlDbType.VarChar, 250).Value = (object?)dto.Remark ?? DBNull.Value;
+            cmd.Parameters.Add("@Operator", SqlDbType.VarChar, 50).Value = (object?)dto.Operator ?? DBNull.Value;
+            cmd.Parameters.Add("@Udt", SqlDbType.DateTime).Value = DateTime.UtcNow;
+            // Opcional:
+            // cmd.Parameters.Add("@HpPartNum", SqlDbType.VarChar, 50).Value = (object?)dto.HpPartNum ?? DBNull.Value;
+
+            var affected = await cmd.ExecuteNonQueryAsync();
+            return affected > 0;
+
+        }
     }
 }
