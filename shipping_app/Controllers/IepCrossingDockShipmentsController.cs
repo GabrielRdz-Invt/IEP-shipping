@@ -386,7 +386,7 @@ namespace shipping_app.Controllers
             FROM dbo.IEP_Crossing_Dock_Shipment
             WHERE {dateColumn} IS NOT NULL
                 AND {dateColumn} >= @from
-                AND {dateColumn} = @to
+                AND {dateColumn} <= @to
             ORDER BY {dateColumn} ASC, [ID] ASC;";
 
             using var conn = new SqlConnection(connectionString);
