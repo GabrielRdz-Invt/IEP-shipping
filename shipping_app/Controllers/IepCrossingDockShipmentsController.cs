@@ -1,9 +1,11 @@
-﻿
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using shipping_app.Models;
 using shipping_app.Repositories;
+using System.Globalization;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace shipping_app.Controllers
 {
@@ -237,6 +239,225 @@ namespace shipping_app.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+
+        [HttpGet("next-id")]
+        public async Task<ActionResult<string>> GetNextId()
+        {
+            try
+            {
+                var nowLocal = DateTime.Now;
+                var nextId = await _repo.GenerateNextIdAsync(nowLocal, _connectionString);
+                return Ok(new { id = nextId });
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generando Next ID.");
+                return StatusCode(500, "Internal server error");
+
+            }
+        }
+
+
+        [HttpGet("report")]
+        public async Task<IActionResult> GetReport(
+            [FromQuery] string? from,
+            [FromQuery] string? to,
+            [FromQuery] string? dateField = "rcvd")
+        {
+            try
+            {
+                // [CAMBIO] Validación de params y parseo seguro
+                if (string.IsNullOrWhiteSpace(from) || string.IsNullOrWhiteSpace(to))
+                    return BadRequest("Parámetros 'from' y 'to' son requeridos.");
+
+                // Aceptamos ISO o 'yyyy-MM-dd'. Usamos límites inclusivos por día.
+                if (!DateTime.TryParse(from, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var fromDt))
+                    return BadRequest("Formato inválido en 'from'. Usa ISO o yyyy-MM-dd.");
+                if (!DateTime.TryParse(to, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var toDt))
+                    return BadRequest("Formato inválido en 'to'. Usa ISO o yyyy-MM-dd.");
+
+                // Cerramos rango (inclusive). Opción A: <= finDelDía
+                var fromBound = new DateTime(fromDt.Year, fromDt.Month, fromDt.Day, 0, 0, 0, DateTimeKind.Local);
+                var toBound = new DateTime(toDt.Year, toDt.Month, toDt.Day, 23, 59, 59, 999, DateTimeKind.Local);
+
+                // [CAMBIO] Selección de columna de fecha permitida (evita inyección)
+                var col = (dateField ?? "rcvd").Trim().ToLowerInvariant() switch
+                {
+                    "shipout" => "ShipOutDate",
+                    _ => "RCVDDATE"
+                };
+
+                // [CAMBIO] Consulta con parámetros (ADO.NET)
+                var rows = await GetReportRowsAsync(col, fromBound, toBound, _connectionString);
+
+                return Ok(rows); // JSON
+            }
+            catch (SqlException sqlEx)
+            {
+                _logger.LogError(sqlEx, "SqlException en Report.");
+                var pd = new ProblemDetails
+                {
+                    Title = "Error generando Reporte",
+                    Detail = $"SQL {sqlEx.Number}: {sqlEx.Message}",
+                    Status = StatusCodes.Status500InternalServerError
+                };
+                return StatusCode(pd.Status!.Value, pd);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generando Reporte.");
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet("report.csv")]
+        public async Task<IActionResult> GetReportCsv(
+            [FromQuery] string? from,
+            [FromQuery] string? to,
+            [FromQuery] string? dateField = "rcvd")
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(from) || string.IsNullOrWhiteSpace(to))
+                    return BadRequest("Parámetros 'from' y 'to' son requeridos.");
+
+                if (!DateTime.TryParse(from, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var fromDt))
+                    return BadRequest("Formato inválido en 'from'. Usa ISO o yyyy-MM-dd.");
+                if (!DateTime.TryParse(to, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var toDt))
+                    return BadRequest("Formato inválido en 'to'. Usa ISO o yyyy-MM-dd.");
+
+                var fromBound = new DateTime(fromDt.Year, fromDt.Month, fromDt.Day, 0, 0, 0, DateTimeKind.Local);
+                var toBound = new DateTime(toDt.Year, toDt.Month, toDt.Day, 0, 0, 0, DateTimeKind.Local);
+
+                var col = (dateField ?? "rcvd").Trim().ToLowerInvariant() switch
+                {
+                    "shipout" => "ShipOutDate",
+                    _ => "RCVDDATE"
+                };
+
+
+                var rows = await GetReportRowsAsync(col, fromBound, toBound, _connectionString);
+
+                // [CAMBIO] Serialización CSV segura
+                var csv = BuildCsv(rows);
+
+                var fileName = $"report_{fromBound:yyyy-MM-dd}_to_{toBound:yyyy-MM-dd}_{col}.csv";
+                return File(Encoding.UTF8.GetBytes(csv), "text/csv", fileName);
+            }
+            catch (SqlException sqlEx)
+            {
+                _logger.LogError(sqlEx, "SqlException en Report CSV.");
+                var pd = new ProblemDetails
+                {
+                    Title = "Error generando CSV",
+                    Detail = $"SQL {sqlEx.Number}: {sqlEx.Message}",
+                    Status = StatusCodes.Status500InternalServerError
+                };
+                return StatusCode(pd.Status!.Value, pd);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generando CSV.");
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        // [CAMBIO] Helper ADO.NET para obtener filas del reporte
+        private async Task<List<object>> GetReportRowsAsync(string dateColumn, DateTime from, DateTime to, string connectionString)
+        {
+            var list = new List<object>();
+
+            // Campos habituales; ajusta según tu tabla
+            var sql = $@"
+            SELECT
+                [ID],
+                [STATUS],
+                [HAWB],
+                [INVREFPO],
+                [IECPARTNUM],
+                [QTY],
+                [BULKS],
+                [CARRIER],
+                [Bin],
+                [RCVDDATE],
+                [ShipOutDate],
+                [Operator]
+            FROM dbo.IEP_Crossing_Dock_Shipment
+            WHERE {dateColumn} IS NOT NULL
+                AND {dateColumn} >= @from
+                AND {dateColumn} = @to
+            ORDER BY {dateColumn} ASC, [ID] ASC;";
+
+            using var conn = new SqlConnection(connectionString);
+            await conn.OpenAsync();
+            using var cmd = new SqlCommand(sql, conn);
+
+            cmd.Parameters.Add("@from", System.Data.SqlDbType.DateTime).Value = from;
+            cmd.Parameters.Add("@to", System.Data.SqlDbType.DateTime).Value = to;
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                // [CAMBIO] Proyección ligera a objeto anónimo para JSON/CSV
+                list.Add(new
+                {
+                    id = reader["ID"]?.ToString(),
+                    status = reader["STATUS"]?.ToString(),
+                    hawb = reader["HAWB"]?.ToString(),
+                    invRefPo = reader["INVREFPO"]?.ToString(),
+                    iecPartNum = reader["IECPARTNUM"]?.ToString(),
+                    qty = reader["QTY"] != DBNull.Value ? Convert.ToInt32(reader["QTY"]) : (int?)null,
+                    bulks = reader["BULKS"]?.ToString(),
+                    carrier = reader["CARRIER"]?.ToString(),
+                    bin = reader["Bin"]?.ToString(),
+                    rcvdDate = reader["RCVDDATE"] != DBNull.Value ? Convert.ToDateTime(reader["RCVDDATE"]).ToString("s") : null, // ISO sin zona
+                    shipOutDate = reader["ShipOutDate"] != DBNull.Value ? Convert.ToDateTime(reader["ShipOutDate"]).ToString("s") : null,
+                    operatorName = reader["Operator"]?.ToString(),
+                });
+            }
+
+            return list;
+        }
+
+        // [CAMBIO] Helper para CSV (escapa comas, comillas y saltos de línea)
+        private static string BuildCsv(List<object> rows)
+        {
+            var sb = new StringBuilder();
+
+            // Encabezados
+            sb.AppendLine("ID,Status,HAWB,INV Ref PO,IEC Part Num,Qty,Bulks,Carrier,Bin,RcvdDate,ShipOutDate,Operator");
+
+            foreach (dynamic r in rows)
+            {
+                string Esc(string? v)
+                {
+                    if (string.IsNullOrEmpty(v)) return "";
+                    var needsQuotes = v.Contains(',') || v.Contains('"') || v.Contains('\n') || v.Contains('\r');
+                    var s = v.Replace("\"", "\"\"");
+                    return needsQuotes ? $"\"{s}\"" : s;
+                }
+
+                sb.AppendLine(string.Join(",", new[]
+                {
+                    Esc(r.id),
+                    Esc(r.status),
+                    Esc(r.hawb),
+                    Esc(r.invRefPo),
+                    Esc(r.iecPartNum),
+                    r.qty?.ToString() ?? "",
+                    Esc(r.bulks),
+                    Esc(r.carrier),
+                    Esc(r.bin),
+                    Esc(r.rcvdDate),
+                    Esc(r.shipOutDate),
+                    Esc(r.operatorName),
+                }));
+            }
+
+            return sb.ToString();
+        }
+
 
     }
 }

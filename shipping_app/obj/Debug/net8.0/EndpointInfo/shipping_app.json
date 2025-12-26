@@ -220,6 +220,107 @@
         }
       }
     },
+    "/api/IepCrossingDockShipments/next-id": {
+      "get": {
+        "tags": [
+          "IepCrossingDockShipments"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/IepCrossingDockShipments/report": {
+      "get": {
+        "tags": [
+          "IepCrossingDockShipments"
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateField",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "rcvd"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/IepCrossingDockShipments/report.csv": {
+      "get": {
+        "tags": [
+          "IepCrossingDockShipments"
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateField",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "rcvd"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/WeatherForecast": {
       "get": {
         "tags": [

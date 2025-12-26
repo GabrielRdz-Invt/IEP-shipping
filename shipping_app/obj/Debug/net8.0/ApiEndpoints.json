@@ -120,6 +120,78 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "shipping_app.Controllers.IepCrossingDockShipmentsController",
+    "Method": "GetNextId",
+    "RelativePath": "api/IepCrossingDockShipments/next-id",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.String",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "shipping_app.Controllers.IepCrossingDockShipmentsController",
+    "Method": "GetReport",
+    "RelativePath": "api/IepCrossingDockShipments/report",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "from",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "to",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "dateField",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "shipping_app.Controllers.IepCrossingDockShipmentsController",
+    "Method": "GetReportCsv",
+    "RelativePath": "api/IepCrossingDockShipments/report.csv",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "from",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "to",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "dateField",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "shipping_app.Controllers.WeatherForecastController",
     "Method": "Get",
     "RelativePath": "WeatherForecast",

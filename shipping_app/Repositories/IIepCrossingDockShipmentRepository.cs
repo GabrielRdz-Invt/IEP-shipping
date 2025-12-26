@@ -20,5 +20,9 @@ namespace shipping_app.Repositories
         Task<bool> UpdateStatusWithShipOutAsync(string id, StatusUpdateDto statusUpdateDto, string connectionString);
 
         Task<bool> UpdateAsync(string id, IepCrossingDockShipmentUpdateDto dto, string connectionString);
+
+        Task<string> GenerateNextIdAsync(DateTime nowLocal, string connectionString);
+
+        Task<List<object>> GetReportRowsAsync(string dateColumn, DateTime from, DateTime to, string connectionString);
     }
 }

@@ -2,6 +2,7 @@
 using shipping_app.Repositories;
 using System;
 using System.Data;
+using System.Globalization;
 
 namespace shipping_app.Models
 {
@@ -348,5 +349,114 @@ namespace shipping_app.Models
             return affected > 0;
 
         }
+
+
+        public async Task<string> GenerateNextIdAsync(DateTime nowLocal, string connectionString)
+        {
+
+            string prefix = $"{nowLocal:yyyy}-{nowLocal:MM}-{nowLocal:dd}-";
+
+            using var conn = new SqlConnection(connectionString);
+            await conn.OpenAsync();
+
+            // Consulta simple: trae los IDs del día (prefijo)
+            const string sql = @"
+                SELECT [ID]
+                FROM dbo.IEP_Crossing_Dock_Shipment
+                WHERE [ID] LIKE @prefix + '%';";
+
+            using var cmd = new SqlCommand(sql, conn);
+            // Evitar AddWithValue: especificar tipo y longitud (tu ID parece VARCHAR(50))
+            var p = new SqlParameter("@prefix", System.Data.SqlDbType.VarChar, 50) { Value = prefix };
+            cmd.Parameters.Add(p);
+
+            int maxConsecutive = 0;
+
+            using (var reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    var id = reader.GetString(0);
+                    // Extraer sufijo después del último '-'
+                    int dash = id.LastIndexOf('-');
+                    if (dash >= 0 && dash < id.Length - 1)
+                    {
+                        var suffix = id.Substring(dash + 1);
+                        if (int.TryParse(suffix, NumberStyles.None, CultureInfo.InvariantCulture, out var num) && num >= 0)
+                        {
+                            if (num > maxConsecutive) maxConsecutive = num;
+                        }
+                    }
+                }
+            }
+            int next = (maxConsecutive >= 0 ? maxConsecutive + 1 : 1);
+            return prefix + next.ToString("D4", CultureInfo.InvariantCulture);
+        }
+
+
+
+        public async Task<List<object>> GetReportRowsAsync(string dateField, DateTime from, DateTime to, string connectionString)
+        {
+            var list = new List<object>();
+            var byShipOut = dateField.Equals("ShipOutDate", StringComparison.OrdinalIgnoreCase)
+                         || dateField.Equals("shipout", StringComparison.OrdinalIgnoreCase);
+            string dateExpr = byShipOut ? "[ShipOutDate]" : "COALESCE([RCVDDATE],[Cdt])";
+
+            var fromStart = new DateTime(from.Year, from.Month, from.Day, 0, 0, 0, DateTimeKind.Local);
+            var toExclusive = new DateTime(to.Year, to.Month, to.Day, 0, 0, 0, DateTimeKind.Local).AddDays(1);
+
+            string sql = $@"SELECT
+                [ID],
+                [STATUS],
+                [HAWB],
+                [INVREFPO],
+                [IECPARTNUM],
+                [QTY],
+                [BULKS],
+                [CARRIER],
+                [Bin],
+                [RCVDDATE],
+                [ShipOutDate],
+                [Operator],
+                [Cdt]
+            FROM dbo.IEP_Crossing_Dock_Shipment
+            WHERE {dateExpr} IS NOT NULL
+                AND {dateExpr} >= @from
+                AND {dateExpr} <  @toExclusive
+            ORDER BY {dateExpr} ASC, [ID] ASC;";
+
+            using var conn = new SqlConnection(connectionString);
+            await conn.OpenAsync();
+            using var cmd = new SqlCommand(sql, conn);
+
+            cmd.Parameters.Add("@from", SqlDbType.DateTime).Value = fromStart;
+            cmd.Parameters.Add("@toExclusive", SqlDbType.DateTime).Value = toExclusive;
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                list.Add(new
+                {
+                    id = reader["ID"]?.ToString(),
+                    status = reader["STATUS"]?.ToString(),
+                    hawb = reader["HAWB"]?.ToString(),
+                    invRefPo = reader["INVREFPO"]?.ToString(),
+                    iecPartNum = reader["IECPARTNUM"]?.ToString(),
+                    qty = reader["QTY"] != DBNull.Value ? Convert.ToInt32(reader["QTY"]) : (int?)null,
+                    bulks = reader["BULKS"]?.ToString(),
+                    carrier = reader["CARRIER"]?.ToString(),
+                    bin = reader["Bin"]?.ToString(),
+                    rcvdDate = reader["RCVDDATE"] != DBNull.Value ? Convert.ToDateTime(reader["RCVDDATE"]).ToString("s") : null,
+                    shipOutDate = reader["ShipOutDate"] != DBNull.Value ? Convert.ToDateTime(reader["ShipOutDate"]).ToString("s") : null,
+                    operatorName = reader["Operator"]?.ToString(),
+                    cdt = reader["Cdt"] != DBNull.Value ? Convert.ToDateTime(reader["Cdt"]).ToString("s") : null,
+                });
+            }
+            return list;
+        }
+
+
+
+
     }
 }
