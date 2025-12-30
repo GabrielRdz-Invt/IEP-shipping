@@ -1,5 +1,21 @@
 [
   {
+    "ContainingType": "shipping_app.Controllers.AuthController",
+    "Method": "Login",
+    "RelativePath": "api/Auth/login",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "shipping_app.Controllers.AuthController\u002BLoginDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "shipping_app.Controllers.IepCrossingDockShipmentsController",
     "Method": "GetAll",
     "RelativePath": "api/IepCrossingDockShipments",

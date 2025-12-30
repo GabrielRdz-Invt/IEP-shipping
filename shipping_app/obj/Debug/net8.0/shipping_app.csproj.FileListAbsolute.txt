@@ -75,3 +75,13 @@ C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_a
 C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\obj\Debug\net8.0\shipping_app.genruntimeconfig.cache
 C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\obj\Debug\net8.0\ref\shipping_app.dll
 C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\obj\Debug\net8.0\shipping_app.sourcelink.json
+C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\bin\Debug\net8.0\System.DirectoryServices.dll
+C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\bin\Debug\net8.0\System.DirectoryServices.AccountManagement.dll
+C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\bin\Debug\net8.0\System.DirectoryServices.Protocols.dll
+C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\bin\Debug\net8.0\System.Formats.Asn1.dll
+C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll
+C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.DirectoryServices.dll
+C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.DirectoryServices.AccountManagement.dll
+C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\bin\Debug\net8.0\runtimes\linux\lib\net8.0\System.DirectoryServices.Protocols.dll
+C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\bin\Debug\net8.0\runtimes\osx\lib\net8.0\System.DirectoryServices.Protocols.dll
+C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.DirectoryServices.Protocols.dll
