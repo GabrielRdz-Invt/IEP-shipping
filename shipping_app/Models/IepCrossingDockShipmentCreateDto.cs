@@ -20,7 +20,5 @@
         public string? Status { get; set; }
         // Opcional: si algún insert sí trae HpPartNum
         public string? HpPartNum { get; set; }
-
-
     }
 }

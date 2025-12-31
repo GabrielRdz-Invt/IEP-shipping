@@ -1,4 +1,6 @@
-﻿using Microsoft.Data.SqlClient;
+﻿// using Microsoft.Data.SqlClient;
+using Npgsql;
+using NpgsqlTypes;
 using shipping_app.Repositories;
 using System;
 using System.Data;
@@ -37,60 +39,66 @@ namespace shipping_app.Models
 
         public List<IepCrossingDockShipment> GetListShippment(string _connectionString)
         {
+
             var list = new List<IepCrossingDockShipment>();
             try
             {
-                using var connection = new SqlConnection(_connectionString);
+                using var connection = new NpgsqlConnection(_connectionString);
                 connection.Open();
 
-                const string query = @"
-                    SELECT *
-                    FROM IEP_Crossing_Dock_Shipment
-                    ORDER BY [ID] DESC;";
+                const string sql = @"
+                SELECT *
+                FROM public.iep_crossing_dock_shipment
+                ORDER BY id DESC;";
 
-                using var command = new SqlCommand(query, connection);
-                using var reader = command.ExecuteReader();
+                using var cmd = new NpgsqlCommand(sql, connection);
 
+                using var reader = cmd.ExecuteReader();
                 while (reader.Read())
                 {
                     var s = new IepCrossingDockShipment
                     {
-                        ID = reader["ID"].ToString(),
-                        HAWB = reader["HAWB"].ToString(),
-                        InvRefPo = reader["INVREFPO"].ToString(),
-                        HpPartNum = reader["HPPARTNUM"].ToString(),
-                        IecPartNum = reader["IECPARTNUM"].ToString(),
-                        Qty = reader["QTY"] != DBNull.Value ? Convert.ToInt32(reader["QTY"]) : (int?)null,
-                        Bulks = reader["BULKS"].ToString(),
-                        BoxPlt = reader["BOXPLT"].ToString(),
-                        RcvdDate = reader["RCVDDATE"] != DBNull.Value ? Convert.ToDateTime(reader["RCVDDATE"]) : (DateTime?)null,
-                        Status = reader["STATUS"].ToString(),
-                        Carrier = reader["CARRIER"].ToString(),
-                        Shipper = reader["SHIPPER"].ToString(),
-                        Bin = reader["Bin"].ToString(),
-                        ShipOutStatus = reader["ShipOutStatus"].ToString(),
-                        RemainQty = reader["RemainQty"] != DBNull.Value ? Convert.ToInt32(reader["RemainQty"]) : (int?)null,
-                        ShipOutDate = reader["ShipOutDate"] != DBNull.Value ? Convert.ToDateTime(reader["ShipOutDate"]) : (DateTime?)null,
-                        TruckNum = reader["Truck#"].ToString(),
-                        SealNum = reader["SEAL#"].ToString(),
-                        ContainerNum = reader["Container#"].ToString(),
-                        ImxInvNum = reader["IMX_INV#"].ToString(),
-                        Operator = reader["Operator"].ToString(),
-                        Cdt = reader["Cdt"] != DBNull.Value ? Convert.ToDateTime(reader["Cdt"]) : (DateTime?)null,
-                        Udt = reader["Udt"] != DBNull.Value ? Convert.ToDateTime(reader["Udt"]) : (DateTime?)null,
-                        Remark = reader["REMARK"].ToString(),
-                        Weight = reader["WEIGHT"].ToString(),
+                        ID = reader["id"]?.ToString(),
+                        HAWB = reader["hawb"]?.ToString(),
+                        InvRefPo = reader["invrefpo"]?.ToString(),
+                        HpPartNum = reader["hppartnum"]?.ToString(),
+                        IecPartNum = reader["iecpartnum"]?.ToString(),
+                        Qty = reader["qty"] != DBNull.Value ? Convert.ToInt32(reader["qty"]) : (int?)null,
+                        Bulks = reader["bulks"]?.ToString(),
+                        BoxPlt = reader["boxplt"]?.ToString(),
+                        RcvdDate = reader["rcvddate"] != DBNull.Value ? Convert.ToDateTime(reader["rcvddate"]) : (DateTime?)null,
+                        Status = reader["status"]?.ToString(),
+                        Carrier = reader["carrier"]?.ToString(),
+                        Shipper = reader["shipper"]?.ToString(),
+                        Bin = reader["bin"]?.ToString(),
+                        ShipOutStatus = reader["shipoutstatus"]?.ToString(),
+                        RemainQty = reader["remainqty"] != DBNull.Value ? Convert.ToInt32(reader["remainqty"]) : (int?)null,
+                        ShipOutDate = reader["shipoutdate"] != DBNull.Value ? Convert.ToDateTime(reader["shipoutdate"]) : (DateTime?)null,
+                        TruckNum = reader["truck_num"]?.ToString(),
+                        SealNum = reader["seal_num"]?.ToString(),
+                        ContainerNum = reader["container_num"]?.ToString(),
+                        ImxInvNum = reader["imx_inv_num"]?.ToString(),
+                        Operator = reader["operator_name"]?.ToString(),
+                        Cdt = reader["cdt"] != DBNull.Value ? Convert.ToDateTime(reader["cdt"]) : (DateTime?)null,
+                        Udt = reader["udt"] != DBNull.Value ? Convert.ToDateTime(reader["udt"]) : (DateTime?)null,
+                        Remark = reader["remark"]?.ToString(),
+                        Weight = reader["weight"]?.ToString(),
                     };
                     list.Add(s);
                 }
+            }
+            catch (PostgresException pgEx)
+            {
+                Console.Error.WriteLine(pgEx);
+                return new List<IepCrossingDockShipment>();
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine(ex);
                 return new List<IepCrossingDockShipment>();
             }
-
             return list;
+
         }
 
 
@@ -101,47 +109,47 @@ namespace shipping_app.Models
 
             try
             {
-                using var connection = new SqlConnection(_connectionString);
+                using var connection = new NpgsqlConnection(_connectionString);
                 connection.Open();
 
                 const string query = @"
                     SELECT *
-                    FROM IEP_Crossing_Dock_Shipment
-                    WHERE [ID] = @Id;";
+                    FROM public.iep_crossing_dock_shipment
+                    WHERE id = @Id;";
 
-                using var command = new SqlCommand(query, connection);
-                command.Parameters.Add(new SqlParameter("@Id", SqlDbType.VarChar, 50) { Value = id });
+                using var command = new NpgsqlCommand(query, connection);
+                command.Parameters.Add(new NpgsqlParameter("@Id", NpgsqlDbType.Varchar, 50) { Value = id });
 
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     var shipment = new IepCrossingDockShipment
                     {
-                        ID = reader["ID"].ToString(),
-                        HAWB = reader["HAWB"].ToString(),
-                        InvRefPo = reader["INVREFPO"].ToString(),
-                        HpPartNum = reader["HPPARTNUM"].ToString(),
-                        IecPartNum = reader["IECPARTNUM"].ToString(),
-                        Qty = reader["QTY"] != DBNull.Value ? Convert.ToInt32(reader["QTY"]) : (int?)null,
-                        Bulks = reader["BULKS"].ToString(),
-                        BoxPlt = reader["BOXPLT"].ToString(),
-                        RcvdDate = reader["RCVDDATE"] != DBNull.Value ? Convert.ToDateTime(reader["RCVDDATE"]) : (DateTime?)null,
-                        Status = reader["STATUS"].ToString(),
-                        Carrier = reader["CARRIER"].ToString(),
-                        Shipper = reader["SHIPPER"].ToString(),
-                        Bin = reader["Bin"].ToString(),
-                        ShipOutStatus = reader["ShipOutStatus"].ToString(),
-                        RemainQty = reader["RemainQty"] != DBNull.Value ? Convert.ToInt32(reader["RemainQty"]) : (int?)null,
-                        ShipOutDate = reader["ShipOutDate"] != DBNull.Value ? Convert.ToDateTime(reader["ShipOutDate"]) : (DateTime?)null,
-                        TruckNum = reader["Truck#"].ToString(),
-                        SealNum = reader["SEAL#"].ToString(),
-                        ContainerNum = reader["Container#"].ToString(),
-                        ImxInvNum = reader["IMX_INV#"].ToString(),
-                        Operator = reader["Operator"].ToString(),
-                        Cdt = reader["Cdt"] != DBNull.Value ? Convert.ToDateTime(reader["Cdt"]) : (DateTime?)null,
-                        Udt = reader["Udt"] != DBNull.Value ? Convert.ToDateTime(reader["Udt"]) : (DateTime?)null,
-                        Remark = reader["REMARK"].ToString(),
-                        Weight = reader["WEIGHT"].ToString(),
+                        ID = reader["id"]?.ToString(),
+                        HAWB = reader["hawb"]?.ToString(),
+                        InvRefPo = reader["invrefpo"]?.ToString(),
+                        HpPartNum = reader["hppartnum"]?.ToString(),
+                        IecPartNum = reader["iecpartnum"]?.ToString(),
+                        Qty = reader["qty"] != DBNull.Value ? Convert.ToInt32(reader["qty"]) : (int?)null,
+                        Bulks = reader["bulks"]?.ToString(),
+                        BoxPlt = reader["boxplt"]?.ToString(),
+                        RcvdDate = reader["rcvddate"] != DBNull.Value ? Convert.ToDateTime(reader["rcvddate"]) : (DateTime?)null,
+                        Status = reader["status"]?.ToString(),
+                        Carrier = reader["carrier"]?.ToString(),
+                        Shipper = reader["shipper"]?.ToString(),
+                        Bin = reader["bin"]?.ToString(),
+                        ShipOutStatus = reader["shipoutstatus"]?.ToString(),
+                        RemainQty = reader["remainqty"] != DBNull.Value ? Convert.ToInt32(reader["remainqty"]) : (int?)null,
+                        ShipOutDate = reader["shipoutdate"] != DBNull.Value ? Convert.ToDateTime(reader["shipoutdate"]) : (DateTime?)null,
+                        TruckNum = reader["truck_num"]?.ToString(),
+                        SealNum = reader["seal_num"]?.ToString(),
+                        ContainerNum = reader["container_num"]?.ToString(),
+                        ImxInvNum = reader["imx_inv_num"]?.ToString(),
+                        Operator = reader["operator_name"]?.ToString(),
+                        Cdt = reader["cdt"] != DBNull.Value ? Convert.ToDateTime(reader["cdt"]) : (DateTime?)null,
+                        Udt = reader["udt"] != DBNull.Value ? Convert.ToDateTime(reader["udt"]) : (DateTime?)null,
+                        Remark = reader["remark"]?.ToString(),
+                        Weight = reader["weight"]?.ToString(),
                     };
 
                     listShipment.Add(shipment);
@@ -161,106 +169,101 @@ namespace shipping_app.Models
         // Insert new shipment record
         public async Task<bool> ExistsAsync(string id, string connectionString)
         {
-            const string sql = @"SELECT 1 From IEP_Crossing_Dock_Shipment WHERE [ID] = @Id;";
-            using var conn = new SqlConnection(connectionString);
+            const string sql = @"SELECT 1 From public.iep_crossing_dock_shipment WHERE id = @Id;";
+            using var conn = new NpgsqlConnection(connectionString);
             await conn.OpenAsync();
-            using var cmd = new SqlCommand(sql, conn);
-            cmd.Parameters.Add(new SqlParameter("@Id", SqlDbType.VarChar, 50) { Value = id });
+            using var cmd = new NpgsqlCommand(sql, conn);
+            cmd.Parameters.Add(new NpgsqlParameter("@Id", NpgsqlDbType.Varchar, 50) { Value = id });
             var result = await cmd.ExecuteScalarAsync();
             return result != null && result != DBNull.Value;
         }
 
 
+
         public async Task<bool> InsertAsync(IepCrossingDockShipmentCreateDto dto, string connectionString)
         {
-            // Sane defaults para fechas de auditoría
-            var now = DateTime.UtcNow;
+            var nowLocal = DateTime.Now;
+            var nowUnspec = DateTime.SpecifyKind(nowLocal, DateTimeKind.Unspecified);
+
 
             const string sql = @"
-                INSERT INTO IEP_Crossing_Dock_Shipment (
-                    [ID],
-                    [HAWB],
-                    [INVREFPO],
-                    [IECPARTNUM],
-                    [QTY],
-                    [BULKS],
-                    [BOXPLT],
-                    [RCVDDATE],
-                    [WEIGHT],
-                    [SHIPPER],
-                    [Bin],
-                    [REMARK],
-                    [CARRIER],
-                    [Operator],
-                    [Cdt],
-                    [Udt],
-                    [STATUS]
-                    -- Opcional: [HPPARTNUM]
-                )
-                VALUES (
-                    @ID,
-                    @HAWB,
-                    @InvRefPo,
-                    @IecPartNum,
-                    @Qty,
-                    @Bulks,
-                    @BoxPlt,
-                    @RcvdDate,
-                    @Weight,
-                    @Shipper,
-                    @Bin,
-                    @Remark,
-                    @Carrier,
-                    @Operator,
-                    @Cdt,
-                    @Udt,
-                    @Status
-                    -- Opcional: @HpPartNum
+            INSERT INTO public.iep_crossing_dock_shipment (
+                id, hawb, invrefpo, iecpartnum, qty, bulks, boxplt, rcvddate, weight,
+                shipper, bin, remark, carrier, operator_name, cdt, udt, status
+            ) VALUES (
+                @id, @hawb, @invrefpo, @iecpartnum, @qty, @bulks, @boxplt, @rcvddate, @weight,
+                @shipper, @bin, @remark, @carrier, @operator_name, @cdt, @udt, @status
             );";
 
-            using var conn = new SqlConnection(connectionString);
+            await using var conn = new NpgsqlConnection(connectionString);
             await conn.OpenAsync();
+            await using var cmd = new NpgsqlCommand(sql, conn);
 
-            using var cmd = new SqlCommand(sql, conn);
             // Requerido
-            cmd.Parameters.Add(new SqlParameter("@ID", SqlDbType.VarChar, 50) { Value = dto.ID });
+            cmd.Parameters.Add(new NpgsqlParameter("@id", NpgsqlDbType.Varchar) { Value = dto.ID });
 
             // Strings y opcionales
-            cmd.Parameters.AddWithValue("@HAWB", (object?)dto.HAWB ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@InvRefPo", (object?)dto.InvRefPo ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@IecPartNum", (object?)dto.IecPartNum ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@Bulks", (object?)dto.Bulks ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@BoxPlt", (object?)dto.BoxPlt ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@Weight", (object?)dto.Weight ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@Shipper", (object?)dto.Shipper ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@Bin", (object?)dto.Bin ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@Remark", (object?)dto.Remark ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@Carrier", (object?)dto.Carrier ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@Operator", (object?)dto.Operator ?? DBNull.Value);
+            cmd.Parameters.Add(new NpgsqlParameter("@hawb", NpgsqlDbType.Varchar) { Value = (object?)dto.HAWB ?? DBNull.Value });
+            cmd.Parameters.Add(new NpgsqlParameter("@invrefpo", NpgsqlDbType.Varchar) { Value = (object?)dto.InvRefPo ?? DBNull.Value });
+            cmd.Parameters.Add(new NpgsqlParameter("@iecpartnum", NpgsqlDbType.Varchar) { Value = (object?)dto.IecPartNum ?? DBNull.Value });
+
+            // FALTABAN (ya están)
+            cmd.Parameters.Add(new NpgsqlParameter("@bulks", NpgsqlDbType.Varchar) { Value = (object?)dto.Bulks ?? DBNull.Value });
+            cmd.Parameters.Add(new NpgsqlParameter("@boxplt", NpgsqlDbType.Varchar) { Value = (object?)dto.BoxPlt ?? DBNull.Value });
 
             // Numéricos y fechas
-            cmd.Parameters.AddWithValue("@Qty", (object?)dto.Qty ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@RcvdDate", (object?)dto.RcvdDate ?? DBNull.Value);
+            cmd.Parameters.Add(new NpgsqlParameter("@qty", NpgsqlDbType.Integer) { Value = (object?)dto.Qty ?? DBNull.Value });
+            if (dto.RcvdDate.HasValue)
+            {
+                var rcvdUnspec = DateTime.SpecifyKind(dto.RcvdDate.Value, DateTimeKind.Unspecified);
+                cmd.Parameters.Add(new NpgsqlParameter("@rcvddate", NpgsqlDbType.Timestamp) { Value = rcvdUnspec });
+            }
+            else
+            {
+                cmd.Parameters.Add(new NpgsqlParameter("@rcvddate", NpgsqlDbType.Timestamp) { Value = DBNull.Value });
+            }
 
-            // Auditoría (server-side)
-            cmd.Parameters.AddWithValue("@Cdt", now);
-            cmd.Parameters.AddWithValue("@Udt", now);
 
-            // Status inicial
-            cmd.Parameters.AddWithValue("@Status", "1");
+            // Más strings
+            cmd.Parameters.Add(new NpgsqlParameter("@weight", NpgsqlDbType.Varchar) { Value = (object?)dto.Weight ?? DBNull.Value });
+            cmd.Parameters.Add(new NpgsqlParameter("@shipper", NpgsqlDbType.Varchar) { Value = (object?)dto.Shipper ?? DBNull.Value });
+            cmd.Parameters.Add(new NpgsqlParameter("@bin", NpgsqlDbType.Varchar) { Value = (object?)dto.Bin ?? DBNull.Value });
+            cmd.Parameters.Add(new NpgsqlParameter("@remark", NpgsqlDbType.Varchar) { Value = (object?)dto.Remark ?? DBNull.Value });
+            cmd.Parameters.Add(new NpgsqlParameter("@carrier", NpgsqlDbType.Varchar) { Value = (object?)dto.Carrier ?? DBNull.Value });
 
-            var affected = await cmd.ExecuteNonQueryAsync();
-            return affected > 0;
+            // OJO: "operator_name" en SQL; el parámetro aquí es @operator
+            cmd.Parameters.Add(new NpgsqlParameter("@operator_name", NpgsqlDbType.Varchar) { Value = (object?)dto.Operator ?? DBNull.Value });
+
+            // Auditoría
+            cmd.Parameters.Add(new NpgsqlParameter("@cdt", NpgsqlDbType.Timestamp) { Value = nowUnspec });
+            cmd.Parameters.Add(new NpgsqlParameter("@udt", NpgsqlDbType.Timestamp) { Value = nowUnspec });
+
+
+            cmd.Parameters.Add(new NpgsqlParameter("@status", NpgsqlDbType.Varchar) { Value = "1" });
+
+            try
+            {
+                var affected = await cmd.ExecuteNonQueryAsync();
+                return affected > 0;
+            }
+            catch (PostgresException pgEx)
+            {
+                // Log: si es 23505 => duplicado; 42703 => columna inexistente; 23502 => not null violation
+                Console.Error.WriteLine($"PG SqlState={pgEx.SqlState} Message={pgEx.MessageText}");
+                Console.Error.WriteLine($"Detail={pgEx.Detail} Where={pgEx.Where}");
+                throw; // Deja que el controller atrape y devuelva ProblemDetails con pgEx.SqlState
+            }
         }
+
 
         // Delete shipment record by ID
         public async Task<bool> DeleteAsync(string id, string connectionString)
         {
-            const string sql = @"DELETE FROM IEP_Crossing_Dock_Shipment WHERE [ID] = @Id;";
-            using var conn = new SqlConnection(connectionString);
+            const string sql = @"DELETE FROM public.iep_crossing_dock_shipment WHERE id = @Id;";
+            using var conn = new NpgsqlConnection(connectionString);
             await conn.OpenAsync();
-            using var cmd = new SqlCommand(sql, conn);
-            cmd.Parameters.Add(new SqlParameter("@Id", SqlDbType.VarChar, 50) { Value = id });
+            using var cmd = new NpgsqlCommand(sql, conn);
+            cmd.Parameters.Add(new NpgsqlParameter("@Id", NpgsqlDbType.Varchar, 50) { Value = id });
             var affected = await cmd.ExecuteNonQueryAsync();
             return affected > 0;
         }
@@ -269,34 +272,37 @@ namespace shipping_app.Models
 
         public async Task<bool> UpdateStatusWithShipOutAsync(string id, StatusUpdateDto dto, string connectionString)
         {
-            // Ajusta tipos según tu tabla:
-            // - Si STATUS es INT -> SqlDbType.Int y dto.Status int.
-            // - Si STATUS es VARCHAR -> SqlDbType.VarChar y dto.Status string.
             const string sql = @"
-                UPDATE dbo.IEP_Crossing_Dock_Shipment
-                SET [STATUS]      = @Status,
-                    [ShipOutDate] = @ShipOutDate,
-                    [Udt]         = @Udt
-                WHERE [ID] = @Id;";
+                UPDATE public.iep_crossing_dock_shipment
+                SET status      = @Status,
+                    shipoutdate = @ShipOutDate,
+                    udt         = @Udt
+                WHERE id = @Id;";
 
-            using var conn = new SqlConnection(connectionString);
+            using var conn = new NpgsqlConnection(connectionString);
             await conn.OpenAsync();
+            using var cmd = new NpgsqlCommand(sql, conn);
 
-            using var cmd = new SqlCommand(sql, conn);
-            cmd.Parameters.Add("@Id", SqlDbType.VarChar, 50).Value = id;
+            cmd.Parameters.Add("@Id", NpgsqlDbType.Varchar, 50).Value = id;
+            cmd.Parameters.Add("@Status", NpgsqlDbType.Varchar, 50).Value = dto.Status;
 
-            // Cambia este tipo si STATUS es varchar en BD.
-            cmd.Parameters.Add("@Status", SqlDbType.VarChar, 50).Value = dto.Status;
+            if (dto.ShipOutDate.HasValue)
+            {
+                var shipOutUnspec = DateTime.SpecifyKind(dto.ShipOutDate.Value, DateTimeKind.Unspecified);
+                cmd.Parameters.Add("@ShipOutDate", NpgsqlDbType.Timestamp).Value = shipOutUnspec;
+            }
+            else
+            {
+                cmd.Parameters.Add("@ShipOutDate", NpgsqlDbType.Timestamp).Value = DBNull.Value;
+            }
 
-            cmd.Parameters.Add("@ShipOutDate", SqlDbType.DateTime).Value =
-                (object?)dto.ShipOutDate ?? DBNull.Value;
 
             // Si quieres que Udt sea la misma fecha elegida, úsala; si no, usa UtcNow.
-            var udt = (dto.SetUdtFromShipOutDate && dto.ShipOutDate.HasValue)
-                ? dto.ShipOutDate.Value
-                : DateTime.UtcNow;
-
-            cmd.Parameters.Add("@Udt", SqlDbType.DateTime).Value = udt;
+            var udtSource = (dto.SetUdtFromShipOutDate && dto.ShipOutDate.HasValue)
+                    ? dto.ShipOutDate.Value
+                    : DateTime.Now;
+            var udtUnspec = DateTime.SpecifyKind(udtSource, DateTimeKind.Unspecified);
+            cmd.Parameters.Add("@Udt", NpgsqlDbType.Timestamp).Value = udtUnspec;
 
             var affected = await cmd.ExecuteNonQueryAsync();
             return affected > 0;
@@ -305,49 +311,53 @@ namespace shipping_app.Models
         public async Task<bool> UpdateAsync(string id, IepCrossingDockShipmentUpdateDto dto, string connectionString)
         {
             const string sql = @"
-            UPDATE dbo.IEP_Crossing_Dock_Shipment
-            SET [CARRIER]   = @Carrier,
-                [HAWB]      = @HAWB,
-                [INVREFPO]  = @InvRefPo,
-                [IECPARTNUM]= @IecPartNum,
-                [QTY]       = @Qty,
-                [BULKS]     = @Bulks,
-                [BOXPLT]    = @BoxPlt,
-                [RCVDDATE]  = @RcvdDate,
-                [WEIGHT]    = @Weight,
-                [SHIPPER]   = @Shipper,
-                [Bin]       = @Bin,
-                [REMARK]    = @Remark,
-                [Operator]  = @Operator,
-                [Udt]       = @Udt
-                -- Opcional: [HPPARTNUM] = @HpPartNum
-            WHERE RTRIM(LTRIM([ID])) = @IdTrim;";
+            UPDATE public.iep_crossing_dock_shipment
+            SET carrier = @Carrier,
+                hawb = @HAWB,
+                invrefpo = @InvRefPo,
+                iecpartnum = @IecPartNum,
+                qty = @Qty,
+                bulks = @Bulks,
+                boxplt = @BoxPlt,
+                rcvddate = @RcvdDate,
+                weight = @Weight,
+                shipper = @Shipper,
+                bin = @Bin,
+                remark = @Remark,
+                operator_name = @Operator,
+                udt = @Udt
+            WHERE id = @IdTrim;";
 
-            using var conn = new SqlConnection(connectionString);
+
+            using var conn = new NpgsqlConnection(connectionString);
             await conn.OpenAsync();
-            using var cmd = new SqlCommand(sql, conn);
+            using var cmd = new NpgsqlCommand(sql, conn);
 
-            cmd.Parameters.Add("@IdTrim", SqlDbType.VarChar, 100).Value = (id ?? string.Empty).Trim();
-            cmd.Parameters.Add("@Carrier", SqlDbType.VarChar, 50).Value = (object?)dto.Carrier ?? DBNull.Value;
-            cmd.Parameters.Add("@HAWB", SqlDbType.VarChar, 50).Value = (object?)dto.HAWB ?? DBNull.Value;
-            cmd.Parameters.Add("@InvRefPo", SqlDbType.VarChar, 50).Value = (object?)dto.InvRefPo ?? DBNull.Value;
-            cmd.Parameters.Add("@IecPartNum", SqlDbType.VarChar, 50).Value = (object?)dto.IecPartNum ?? DBNull.Value;
-            cmd.Parameters.Add("@Qty", SqlDbType.Int).Value = (object?)dto.Qty ?? DBNull.Value;
-            cmd.Parameters.Add("@Bulks", SqlDbType.VarChar, 50).Value = (object?)dto.Bulks ?? DBNull.Value;
-            cmd.Parameters.Add("@BoxPlt", SqlDbType.VarChar, 50).Value = (object?)dto.BoxPlt ?? DBNull.Value;
-            cmd.Parameters.Add("@RcvdDate", SqlDbType.DateTime).Value = (object?)dto.RcvdDate ?? DBNull.Value;
-            cmd.Parameters.Add("@Weight", SqlDbType.VarChar, 50).Value = (object?)dto.Weight ?? DBNull.Value;
-            cmd.Parameters.Add("@Shipper", SqlDbType.VarChar, 50).Value = (object?)dto.Shipper ?? DBNull.Value;
-            cmd.Parameters.Add("@Bin", SqlDbType.VarChar, 50).Value = (object?)dto.Bin ?? DBNull.Value;
-            cmd.Parameters.Add("@Remark", SqlDbType.VarChar, 250).Value = (object?)dto.Remark ?? DBNull.Value;
-            cmd.Parameters.Add("@Operator", SqlDbType.VarChar, 50).Value = (object?)dto.Operator ?? DBNull.Value;
-            cmd.Parameters.Add("@Udt", SqlDbType.DateTime).Value = DateTime.UtcNow;
-            // Opcional:
-            // cmd.Parameters.Add("@HpPartNum", SqlDbType.VarChar, 50).Value = (object?)dto.HpPartNum ?? DBNull.Value;
+            cmd.Parameters.Add("@IdTrim", NpgsqlDbType.Varchar, 100).Value = (id ?? string.Empty).Trim();
+            cmd.Parameters.Add("@Carrier", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Carrier ?? DBNull.Value;
+            cmd.Parameters.Add("@HAWB", NpgsqlDbType.Varchar, 50).Value = (object?)dto.HAWB ?? DBNull.Value;
+            cmd.Parameters.Add("@InvRefPo", NpgsqlDbType.Varchar, 50).Value = (object?)dto.InvRefPo ?? DBNull.Value;
+            cmd.Parameters.Add("@IecPartNum", NpgsqlDbType.Varchar, 50).Value = (object?)dto.IecPartNum ?? DBNull.Value;
+            cmd.Parameters.Add("@Qty", NpgsqlDbType.Integer).Value = (object?)dto.Qty ?? DBNull.Value;
+            cmd.Parameters.Add("@Bulks", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Bulks ?? DBNull.Value;
+            cmd.Parameters.Add("@BoxPlt", NpgsqlDbType.Varchar, 50).Value = (object?)dto.BoxPlt ?? DBNull.Value;
+
+            cmd.Parameters.Add("@RcvdDate", NpgsqlDbType.Timestamp).Value =
+                dto.RcvdDate.HasValue
+                ? DateTime.SpecifyKind(dto.RcvdDate.Value, DateTimeKind.Unspecified)
+                : (object)DBNull.Value;
+
+            cmd.Parameters.Add("@Weight", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Weight ?? DBNull.Value;
+            cmd.Parameters.Add("@Shipper", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Shipper ?? DBNull.Value;
+            cmd.Parameters.Add("@Bin", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Bin ?? DBNull.Value;
+            cmd.Parameters.Add("@Remark", NpgsqlDbType.Varchar, 250).Value = (object?)dto.Remark ?? DBNull.Value;
+            cmd.Parameters.Add("@Operator", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Operator ?? DBNull.Value;
+
+            var udtUnspec = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Unspecified);
+            cmd.Parameters.Add("@Udt", NpgsqlDbType.Timestamp).Value = udtUnspec;
 
             var affected = await cmd.ExecuteNonQueryAsync();
             return affected > 0;
-
         }
 
 
@@ -356,19 +366,16 @@ namespace shipping_app.Models
 
             string prefix = $"{nowLocal:yyyy}-{nowLocal:MM}-{nowLocal:dd}-";
 
-            using var conn = new SqlConnection(connectionString);
+            using var conn = new NpgsqlConnection(connectionString);
             await conn.OpenAsync();
 
-            // Consulta simple: trae los IDs del día (prefijo)
             const string sql = @"
-                SELECT [ID]
-                FROM dbo.IEP_Crossing_Dock_Shipment
-                WHERE [ID] LIKE @prefix + '%';";
+                SELECT id
+                FROM public.iep_crossing_dock_shipment
+                WHERE id LIKE (@prefix || '%');";
 
-            using var cmd = new SqlCommand(sql, conn);
-            // Evitar AddWithValue: especificar tipo y longitud (tu ID parece VARCHAR(50))
-            var p = new SqlParameter("@prefix", System.Data.SqlDbType.VarChar, 50) { Value = prefix };
-            cmd.Parameters.Add(p);
+            await using var cmd = new NpgsqlCommand(sql, conn);
+            cmd.Parameters.Add(new NpgsqlParameter("@prefix", NpgsqlDbType.Varchar, 50) { Value = prefix });
 
             int maxConsecutive = 0;
 
@@ -398,63 +405,106 @@ namespace shipping_app.Models
         public async Task<List<object>> GetReportRowsAsync(string dateField, DateTime from, DateTime to, string connectionString)
         {
             var list = new List<object>();
-            var byShipOut = dateField.Equals("ShipOutDate", StringComparison.OrdinalIgnoreCase)
-                         || dateField.Equals("shipout", StringComparison.OrdinalIgnoreCase);
-            string dateExpr = byShipOut ? "[ShipOutDate]" : "COALESCE([RCVDDATE],[Cdt])";
 
-            var fromStart = new DateTime(from.Year, from.Month, from.Day, 0, 0, 0, DateTimeKind.Local);
-            var toExclusive = new DateTime(to.Year, to.Month, to.Day, 0, 0, 0, DateTimeKind.Local).AddDays(1);
+            string dateExpr = (dateField ?? "rcvd").Trim().ToLowerInvariant() switch
+            {
+                "shipout" => "shipoutdate",
+                "shipoutdate" => "shipoutdate",
+                "rcvd" => "rcvddate"   // por defecto
+            };
 
-            string sql = $@"SELECT
-                [ID],
-                [STATUS],
-                [HAWB],
-                [INVREFPO],
-                [IECPARTNUM],
-                [QTY],
-                [BULKS],
-                [CARRIER],
-                [Bin],
-                [RCVDDATE],
-                [ShipOutDate],
-                [Operator],
-                [Cdt]
-            FROM dbo.IEP_Crossing_Dock_Shipment
+            var fromUnspec = DateTime.SpecifyKind(from, DateTimeKind.Unspecified);
+            var toUnspec = DateTime.SpecifyKind(to, DateTimeKind.Unspecified);
+
+            string sql = $@"
+            SELECT
+                id,
+                status,
+                hawb,
+                invrefpo,
+                iecpartnum,
+                qty,
+                bulks,
+                carrier,
+                bin,
+                rcvddate,
+                shipoutdate,
+                operator_name,
+                cdt
+            FROM public.iep_crossing_dock_shipment
             WHERE {dateExpr} IS NOT NULL
                 AND {dateExpr} >= @from
-                AND {dateExpr} <  @toExclusive
-            ORDER BY {dateExpr} ASC, [ID] ASC;";
+                AND {dateExpr} <= @to
+            ORDER BY {dateExpr} ASC, id ASC;";
 
-            using var conn = new SqlConnection(connectionString);
+            using var conn = new NpgsqlConnection(connectionString);
             await conn.OpenAsync();
-            using var cmd = new SqlCommand(sql, conn);
+            using var cmd = new NpgsqlCommand(sql, conn);
 
-            cmd.Parameters.Add("@from", SqlDbType.DateTime).Value = fromStart;
-            cmd.Parameters.Add("@toExclusive", SqlDbType.DateTime).Value = toExclusive;
+            cmd.Parameters.Add("@from", NpgsqlDbType.Timestamp).Value = fromUnspec;
+            cmd.Parameters.Add("@to", NpgsqlDbType.Timestamp).Value = toUnspec;
 
             using var reader = await cmd.ExecuteReaderAsync();
+
+            int idxId = reader.GetOrdinal("id");
+            int idxStatus = reader.GetOrdinal("status");
+            int idxHawb = reader.GetOrdinal("hawb");
+            int idxInvRefPo = reader.GetOrdinal("invrefpo");
+            int idxIecPartNum = reader.GetOrdinal("iecpartnum");
+            int idxQty = reader.GetOrdinal("qty");
+            int idxBulks = reader.GetOrdinal("bulks");
+            int idxCarrier = reader.GetOrdinal("carrier");
+            int idxBin = reader.GetOrdinal("bin");
+            int idxRcvdDate = reader.GetOrdinal("rcvddate");
+            int idxShipOut = reader.GetOrdinal("shipoutdate");
+
+            int idxOperator = reader.GetOrdinal("operator_name");
+
+            int idxCdt = reader.GetOrdinal("cdt");
+
             while (await reader.ReadAsync())
             {
                 list.Add(new
                 {
-                    id = reader["ID"]?.ToString(),
-                    status = reader["STATUS"]?.ToString(),
-                    hawb = reader["HAWB"]?.ToString(),
-                    invRefPo = reader["INVREFPO"]?.ToString(),
-                    iecPartNum = reader["IECPARTNUM"]?.ToString(),
-                    qty = reader["QTY"] != DBNull.Value ? Convert.ToInt32(reader["QTY"]) : (int?)null,
-                    bulks = reader["BULKS"]?.ToString(),
-                    carrier = reader["CARRIER"]?.ToString(),
-                    bin = reader["Bin"]?.ToString(),
-                    rcvdDate = reader["RCVDDATE"] != DBNull.Value ? Convert.ToDateTime(reader["RCVDDATE"]).ToString("s") : null,
-                    shipOutDate = reader["ShipOutDate"] != DBNull.Value ? Convert.ToDateTime(reader["ShipOutDate"]).ToString("s") : null,
-                    operatorName = reader["Operator"]?.ToString(),
-                    cdt = reader["Cdt"] != DBNull.Value ? Convert.ToDateTime(reader["Cdt"]).ToString("s") : null,
+                    id = reader.IsDBNull(idxId) ? null : reader.GetString(idxId),
+                    status = reader.IsDBNull(idxStatus) ? null : reader.GetString(idxStatus),
+                    hawb = reader.IsDBNull(idxHawb) ? null : reader.GetString(idxHawb),
+                    invRefPo = reader.IsDBNull(idxInvRefPo) ? null : reader.GetString(idxInvRefPo),
+                    iecPartNum = reader.IsDBNull(idxIecPartNum) ? null : reader.GetString(idxIecPartNum),
+                    qty = reader.IsDBNull(idxQty) ? (int?)null : reader.GetInt32(idxQty),
+                    bulks = reader.IsDBNull(idxBulks) ? null : reader.GetString(idxBulks),
+                    carrier = reader.IsDBNull(idxCarrier) ? null : reader.GetString(idxCarrier),
+                    bin = reader.IsDBNull(idxBin) ? null : reader.GetString(idxBin),
+
+                    // [CAMBIO] Serialización ISO "s"
+                    rcvdDate = reader.IsDBNull(idxRcvdDate) ? null : reader.GetDateTime(idxRcvdDate).ToString("s"),
+                    shipOutDate = reader.IsDBNull(idxShipOut) ? null : reader.GetDateTime(idxShipOut).ToString("s"),
+
+                    // [CAMBIO] operador correcto
+                    operatorName = reader.IsDBNull(idxOperator) ? null : reader.GetString(idxOperator),
+
+                    cdt = reader.IsDBNull(idxCdt) ? null : reader.GetDateTime(idxCdt).ToString("s"),
                 });
             }
+
             return list;
+
+
         }
 
+        private static string ResolveDateExpr(string dateField)
+        {
+            // Admite "shipoutdate" o "shipout"
+            if (dateField.Equals("shipoutdate", StringComparison.OrdinalIgnoreCase) ||
+                dateField.Equals("shipout", StringComparison.OrdinalIgnoreCase))
+            {
+                return "shipoutdate";
+            }
+
+            // Por defecto: COALESCE(rcvddate, cdt)
+            // (Ambas columnas en minúsculas, sin comillas)
+            return "coalesce(rcvddate, cdt)";
+        }
 
 
 
