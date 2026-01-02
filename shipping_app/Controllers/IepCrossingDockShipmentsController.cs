@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
+// using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using Npgsql;
+using NpgsqlTypes;
 using shipping_app.Models;
 using shipping_app.Repositories;
 using System.Globalization;
@@ -89,14 +91,14 @@ namespace shipping_app.Controllers
                     var ok = await _repo.InsertAsync(dto, _connectionString);
                     if (!ok) return StatusCode(500, "No se pudo insertar el registro.");
                 }
-                catch (SqlException sqlEx)
+                catch (PostgresException pgEx)
                 {
                     // Log detallado para ver causa real
-                    _logger.LogError(sqlEx, "SqlException en INSERT");
+                    _logger.LogError(pgEx, "PostgresException en INSERT");
                     var pd = new ProblemDetails
                     {
                         Title = "Error al insertar en BD",
-                        Detail = $"SQL {sqlEx.Number}: {sqlEx.Message}",
+                        Detail = $"PG {pgEx.SqlState}: {pgEx.MessageText}",
                         Status = StatusCodes.Status500InternalServerError
                     };
                     return StatusCode(pd.Status!.Value, pd); // devuelve el mensaje concreto
@@ -145,11 +147,11 @@ namespace shipping_app.Controllers
                     if (!ok)
                         return StatusCode(500, "No se pudo eliminar el registro."); // si por alguna razón no afectó filas
                 }
-                catch (SqlException sqlEx)
+                catch (PostgresException pgEx)
                 {
                     // Por si el usuario no tiene permisos o hay FK/trigger
-                    _logger.LogError(sqlEx, "SqlException en DELETE");
-                    return StatusCode(500, $"SQL {sqlEx.Number}: {sqlEx.Message}");
+                    _logger.LogError(pgEx, "SqlException en DELETE");
+                    return StatusCode(500, $"PG  {pgEx.SqlState} :  {pgEx.MessageText}");
                 }
 
                 return NoContent(); // 204
@@ -183,10 +185,10 @@ namespace shipping_app.Controllers
                     var ok = await _repo.UpdateStatusWithShipOutAsync(id, dto, _connectionString);
                     if (!ok) return StatusCode(500, "No se pudo actualizar el status/fecha de salida.");
                 }
-                catch (SqlException sqlEx)
+                catch (PostgresException pgEx)
                 {
-                    _logger.LogError(sqlEx, "SqlException en ScanOut");
-                    return StatusCode(500, $"SQL {sqlEx.Number}: {sqlEx.Message}");
+                    _logger.LogError(pgEx, "SqlException en ScanOut");
+                    return StatusCode(500, $"PG  {pgEx.SqlState} :  {pgEx.MessageText}");
                 }
 
                 // Opcional: devolver la fila actualizada
@@ -221,10 +223,10 @@ namespace shipping_app.Controllers
                     var ok = await _repo.UpdateAsync(idNorm, dto, _connectionString);
                     if (!ok) return StatusCode(500, "No se pudo actualizar el registro.");
                 }
-                catch (SqlException sqlEx)
+                catch (PostgresException pgEx)
                 {
-                    _logger.LogError(sqlEx, "SqlException en UPDATE");
-                    return StatusCode(500, $"SQL {sqlEx.Number}: {sqlEx.Message}");
+                    _logger.LogError(pgEx, "SqlException en UPDATE");
+                    return StatusCode(500, $"PG   {pgEx.SqlState}  :   {pgEx.MessageText}");
                 }
 
                 var updated = _repo.GetListShippmentById(idNorm, _connectionString)?.FirstOrDefault();
@@ -293,13 +295,13 @@ namespace shipping_app.Controllers
 
                 return Ok(rows); // JSON
             }
-            catch (SqlException sqlEx)
+            catch (PostgresException pgEx)
             {
-                _logger.LogError(sqlEx, "SqlException en Report.");
+                _logger.LogError(pgEx, "SqlException en Report.");
                 var pd = new ProblemDetails
                 {
                     Title = "Error generando Reporte",
-                    Detail = $"SQL {sqlEx.Number}: {sqlEx.Message}",
+                    Detail = $"PG   {pgEx.SqlState}  :   {pgEx.MessageText}",
                     Status = StatusCodes.Status500InternalServerError
                 };
                 return StatusCode(pd.Status!.Value, pd);
@@ -317,6 +319,7 @@ namespace shipping_app.Controllers
             [FromQuery] string? to,
             [FromQuery] string? dateField = "rcvd")
         {
+
             try
             {
                 if (string.IsNullOrWhiteSpace(from) || string.IsNullOrWhiteSpace(to))
@@ -327,31 +330,36 @@ namespace shipping_app.Controllers
                 if (!DateTime.TryParse(to, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var toDt))
                     return BadRequest("Formato inválido en 'to'. Usa ISO o yyyy-MM-dd.");
 
+                // [CAMBIO] Igual que JSON: rango inclusivo hasta fin del día
                 var fromBound = new DateTime(fromDt.Year, fromDt.Month, fromDt.Day, 0, 0, 0, DateTimeKind.Local);
-                var toBound = new DateTime(toDt.Year, toDt.Month, toDt.Day, 0, 0, 0, DateTimeKind.Local);
+                var toBound = new DateTime(toDt.Year, toDt.Month, toDt.Day, 23, 59, 59, 999, DateTimeKind.Local);
 
+                // [CAMBIO] Misma regla de columna: 'rcvd' usa COALESCE(rcvddate, cdt)
                 var col = (dateField ?? "rcvd").Trim().ToLowerInvariant() switch
                 {
-                    "shipout" => "ShipOutDate",
-                    _ => "RCVDDATE"
+                    "shipout" => "shipoutdate",
+                    _ => "coalesce(rcvddate, cdt)"
                 };
 
+                // [CAMBIO] Parámetros como Unspecified para 'timestamp without time zone'
+                var fromUnspec = DateTime.SpecifyKind(fromBound, DateTimeKind.Unspecified);
+                var toUnspec = DateTime.SpecifyKind(toBound, DateTimeKind.Unspecified);
 
-                var rows = await GetReportRowsAsync(col, fromBound, toBound, _connectionString);
+                // [CAMBIO] Pasar Unspecified al helper
+                var rows = await GetReportRowsAsync(col, fromUnspec, toUnspec, _connectionString);
 
-                // [CAMBIO] Serialización CSV segura
                 var csv = BuildCsv(rows);
 
-                var fileName = $"report_{fromBound:yyyy-MM-dd}_to_{toBound:yyyy-MM-dd}_{col}.csv";
+                var fileName = $"report_{fromBound:yyyy-MM-dd}_to_{toBound:yyyy-MM-dd}_{(dateField == "shipout" ? "shipoutdate" : "rcvd")}.csv";
                 return File(Encoding.UTF8.GetBytes(csv), "text/csv", fileName);
             }
-            catch (SqlException sqlEx)
+            catch (PostgresException pgEx)
             {
-                _logger.LogError(sqlEx, "SqlException en Report CSV.");
+                _logger.LogError(pgEx, "SqlException en Report CSV.");
                 var pd = new ProblemDetails
                 {
                     Title = "Error generando CSV",
-                    Detail = $"SQL {sqlEx.Number}: {sqlEx.Message}",
+                    Detail = $"PG    {pgEx.SqlState}   :    {pgEx.MessageText}",
                     Status = StatusCodes.Status500InternalServerError
                 };
                 return StatusCode(pd.Status!.Value, pd);
@@ -361,63 +369,69 @@ namespace shipping_app.Controllers
                 _logger.LogError(ex, "Error generando CSV.");
                 return StatusCode(500, ex.Message);
             }
+
         }
 
         // [CAMBIO] Helper ADO.NET para obtener filas del reporte
         private async Task<List<object>> GetReportRowsAsync(string dateColumn, DateTime from, DateTime to, string connectionString)
         {
+
             var list = new List<object>();
 
-            // Campos habituales; ajusta según tu tabla
             var sql = $@"
             SELECT
-                [ID],
-                [STATUS],
-                [HAWB],
-                [INVREFPO],
-                [IECPARTNUM],
-                [QTY],
-                [BULKS],
-                [CARRIER],
-                [Bin],
-                [RCVDDATE],
-                [ShipOutDate],
-                [Operator]
-            FROM dbo.IEP_Crossing_Dock_Shipment
+                id,
+                status,
+                hawb,
+                invrefpo,
+                iecpartnum,
+                qty,
+                bulks,
+                carrier,
+                bin,
+                rcvddate,
+                shipoutdate,
+                operator_name
+            FROM public.iep_crossing_dock_shipment
             WHERE {dateColumn} IS NOT NULL
-                AND {dateColumn} >= @from
-                AND {dateColumn} <= @to
-            ORDER BY {dateColumn} ASC, [ID] ASC;";
+              AND {dateColumn} >= @from
+              AND {dateColumn} <= @to
+            ORDER BY {dateColumn} ASC, id ASC;";
 
-            using var conn = new SqlConnection(connectionString);
+            using var conn = new NpgsqlConnection(connectionString);
             await conn.OpenAsync();
-            using var cmd = new SqlCommand(sql, conn);
+            using var cmd = new NpgsqlCommand(sql, conn);
 
-            cmd.Parameters.Add("@from", System.Data.SqlDbType.DateTime).Value = from;
-            cmd.Parameters.Add("@to", System.Data.SqlDbType.DateTime).Value = to;
+            // [CAMBIO] Convertir a Unspecified por si llegan Local/Utc
+            var fromUnspec = DateTime.SpecifyKind(from, DateTimeKind.Unspecified);
+            var toUnspec = DateTime.SpecifyKind(to, DateTimeKind.Unspecified);
+
+            // [CAMBIO] Asignar Unspecified a parámetros Npgsql
+            cmd.Parameters.Add("@from", NpgsqlDbType.Timestamp).Value = fromUnspec;
+            cmd.Parameters.Add("@to", NpgsqlDbType.Timestamp).Value = toUnspec;
 
             using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                // [CAMBIO] Proyección ligera a objeto anónimo para JSON/CSV
                 list.Add(new
                 {
-                    id = reader["ID"]?.ToString(),
-                    status = reader["STATUS"]?.ToString(),
-                    hawb = reader["HAWB"]?.ToString(),
-                    invRefPo = reader["INVREFPO"]?.ToString(),
-                    iecPartNum = reader["IECPARTNUM"]?.ToString(),
-                    qty = reader["QTY"] != DBNull.Value ? Convert.ToInt32(reader["QTY"]) : (int?)null,
-                    bulks = reader["BULKS"]?.ToString(),
-                    carrier = reader["CARRIER"]?.ToString(),
-                    bin = reader["Bin"]?.ToString(),
-                    rcvdDate = reader["RCVDDATE"] != DBNull.Value ? Convert.ToDateTime(reader["RCVDDATE"]).ToString("s") : null, // ISO sin zona
-                    shipOutDate = reader["ShipOutDate"] != DBNull.Value ? Convert.ToDateTime(reader["ShipOutDate"]).ToString("s") : null,
-                    operatorName = reader["Operator"]?.ToString(),
+                    id = reader["id"]?.ToString(),
+                    status = reader["status"]?.ToString(),
+                    hawb = reader["hawb"]?.ToString(),
+                    invRefPo = reader["invrefpo"]?.ToString(),
+                    iecPartNum = reader["iecpartnum"]?.ToString(),
+                    qty = reader["qty"] != DBNull.Value ? Convert.ToInt32(reader["qty"]) : (int?)null,
+                    bulks = reader["bulks"]?.ToString(),
+                    carrier = reader["carrier"]?.ToString(),
+                    bin = reader["bin"]?.ToString(),
+                    rcvdDate = reader["rcvddate"] != DBNull.Value ? Convert.ToDateTime(reader["rcvddate"]).ToString("s") : null,
+                    shipOutDate = reader["shipoutdate"] != DBNull.Value ? Convert.ToDateTime(reader["shipoutdate"]).ToString("s") : null,
+                    operatorName = reader["operator_name"]?.ToString(),
                 });
             }
 
             return list;
+
         }
 
         // [CAMBIO] Helper para CSV (escapa comas, comillas y saltos de línea)
