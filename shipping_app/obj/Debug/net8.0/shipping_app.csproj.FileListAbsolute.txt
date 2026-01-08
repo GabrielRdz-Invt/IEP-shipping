@@ -87,3 +87,5 @@ C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_a
 C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.DirectoryServices.Protocols.dll
 C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\bin\Debug\net8.0\Npgsql.dll
 C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\bin\Debug\net8.0\System.Diagnostics.DiagnosticSource.dll
+C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\bin\Debug\net8.0\ExcelDataReader.dll
+C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\bin\Debug\net8.0\ExcelDataReader.DataSet.dll

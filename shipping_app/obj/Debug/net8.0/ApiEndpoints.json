@@ -192,6 +192,74 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "shipping_app.Controllers.IepCrossingDockShipmentsController",
+    "Method": "UploadExcel",
+    "RelativePath": "api/IepCrossingDockShipments/upload-file",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "File",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "shipping_app.Controllers.IepCrossingDockShipmentsController",
+    "Method": "Validate",
+    "RelativePath": "api/IepCrossingDockShipments/validate",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "shipping_app.Models.SecondScanValidateRequestDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "shipping_app.Models.SecondScanValidateResponseDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "shipping_app.Controllers.IepCrossingDockShipmentsController",
+    "Method": "ValidateBool",
+    "RelativePath": "api/IepCrossingDockShipments/validate-bool",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "shipping_app.Controllers.IepCrossingDockShipmentsController\u002BValidateRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "shipping_app.Controllers.IepCrossingDockShipmentsController\u002BValidateResponse",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
     "ContainingType": "shipping_app.Controllers.WeatherForecastController",
     "Method": "Get",
     "RelativePath": "WeatherForecast",
