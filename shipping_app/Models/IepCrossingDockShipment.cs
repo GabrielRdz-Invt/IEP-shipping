@@ -1,10 +1,12 @@
 ﻿// using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using Npgsql;
 using NpgsqlTypes;
 using shipping_app.Repositories;
 using System;
 using System.Data;
 using System.Globalization;
+using System.Linq;
 
 namespace shipping_app.Models
 {
@@ -189,10 +191,10 @@ namespace shipping_app.Models
             const string sql = @"
             INSERT INTO public.iep_crossing_dock_shipment (
                 id, hawb, invrefpo, iecpartnum, qty, bulks, boxplt, rcvddate, weight,
-                shipper, bin, remark, carrier, operator_name, cdt, udt, status
+                shipper, bin, remark, carrier, operator_name, cdt, udt, status, hppartnum
             ) VALUES (
                 @id, @hawb, @invrefpo, @iecpartnum, @qty, @bulks, @boxplt, @rcvddate, @weight,
-                @shipper, @bin, @remark, @carrier, @operator_name, @cdt, @udt, @status
+                @shipper, @bin, @remark, @carrier, @operator_name, @cdt, @udt, @status, @hppartnum
             );";
 
             await using var conn = new NpgsqlConnection(connectionString);
@@ -206,6 +208,7 @@ namespace shipping_app.Models
             cmd.Parameters.Add(new NpgsqlParameter("@hawb", NpgsqlDbType.Varchar) { Value = (object?)dto.HAWB ?? DBNull.Value });
             cmd.Parameters.Add(new NpgsqlParameter("@invrefpo", NpgsqlDbType.Varchar) { Value = (object?)dto.InvRefPo ?? DBNull.Value });
             cmd.Parameters.Add(new NpgsqlParameter("@iecpartnum", NpgsqlDbType.Varchar) { Value = (object?)dto.IecPartNum ?? DBNull.Value });
+            cmd.Parameters.Add(new NpgsqlParameter("@hppartnum", NpgsqlDbType.Varchar) { Value =(object?)dto.HpPartNum ?? DBNull.Value });
 
             // FALTABAN (ya están)
             cmd.Parameters.Add(new NpgsqlParameter("@bulks", NpgsqlDbType.Varchar) { Value = (object?)dto.Bulks ?? DBNull.Value });
@@ -315,6 +318,7 @@ namespace shipping_app.Models
             SET carrier = @Carrier,
                 hawb = @HAWB,
                 invrefpo = @InvRefPo,
+                hppartnum = @HpPartNum,
                 iecpartnum = @IecPartNum,
                 qty = @Qty,
                 bulks = @Bulks,
@@ -337,6 +341,7 @@ namespace shipping_app.Models
             cmd.Parameters.Add("@Carrier", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Carrier ?? DBNull.Value;
             cmd.Parameters.Add("@HAWB", NpgsqlDbType.Varchar, 50).Value = (object?)dto.HAWB ?? DBNull.Value;
             cmd.Parameters.Add("@InvRefPo", NpgsqlDbType.Varchar, 50).Value = (object?)dto.InvRefPo ?? DBNull.Value;
+            cmd.Parameters.Add("@HpPartNum", NpgsqlDbType.Varchar, 50).Value = (object?)dto.HpPartNum ?? DBNull.Value;
             cmd.Parameters.Add("@IecPartNum", NpgsqlDbType.Varchar, 50).Value = (object?)dto.IecPartNum ?? DBNull.Value;
             cmd.Parameters.Add("@Qty", NpgsqlDbType.Integer).Value = (object?)dto.Qty ?? DBNull.Value;
             cmd.Parameters.Add("@Bulks", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Bulks ?? DBNull.Value;
@@ -422,6 +427,7 @@ namespace shipping_app.Models
                 status,
                 hawb,
                 invrefpo,
+                hppartnum,
                 iecpartnum,
                 qty,
                 bulks,
@@ -449,6 +455,7 @@ namespace shipping_app.Models
             int idxId = reader.GetOrdinal("id");
             int idxStatus = reader.GetOrdinal("status");
             int idxHawb = reader.GetOrdinal("hawb");
+            int idxHpPartNum = reader.GetOrdinal("hppartnum");
             int idxInvRefPo = reader.GetOrdinal("invrefpo");
             int idxIecPartNum = reader.GetOrdinal("iecpartnum");
             int idxQty = reader.GetOrdinal("qty");
@@ -470,6 +477,7 @@ namespace shipping_app.Models
                     status = reader.IsDBNull(idxStatus) ? null : reader.GetString(idxStatus),
                     hawb = reader.IsDBNull(idxHawb) ? null : reader.GetString(idxHawb),
                     invRefPo = reader.IsDBNull(idxInvRefPo) ? null : reader.GetString(idxInvRefPo),
+                    HpPartNum = reader.IsDBNull (idxHpPartNum) ? null : reader.GetString(idxHpPartNum),
                     iecPartNum = reader.IsDBNull(idxIecPartNum) ? null : reader.GetString(idxIecPartNum),
                     qty = reader.IsDBNull(idxQty) ? (int?)null : reader.GetInt32(idxQty),
                     bulks = reader.IsDBNull(idxBulks) ? null : reader.GetString(idxBulks),
@@ -507,6 +515,60 @@ namespace shipping_app.Models
         }
 
 
+        public async Task<bool> ValidateTrackingAndPartAsync(string trackingNumber, string hpPartNum, string connectionString)
+        {
+            await using var conn = new NpgsqlConnection(connectionString);
+            await conn.OpenAsync();
 
+            const string sql = @"
+            SELECT EXISTS (
+                SELECT 1
+                FROM public.tracking_log AS tl
+                WHERE
+                    upper(regexp_replace(tl.tk_num, '\s|\u00A0', '', 'g')) = upper(regexp_replace(@hawb,  '\s|\u00A0', '', 'g'))
+                AND
+                    upper(regexp_replace(tl.hp_num, '\s|-|\u00A0', '', 'g')) = upper(regexp_replace(@hp,    '\s|-|\u00A0', '', 'g'))
+            );";
+
+            await using var cmd = new NpgsqlCommand(sql, conn);
+            cmd.Parameters.Add(new NpgsqlParameter("hawb", NpgsqlDbType.Text) { Value = trackingNumber ?? (object)DBNull.Value });
+            cmd.Parameters.Add(new NpgsqlParameter("hp", NpgsqlDbType.Text) { Value = hpPartNum ?? (object)DBNull.Value });
+
+            var scalar = await cmd.ExecuteScalarAsync();
+            return scalar is bool b && b;
+        }
+
+        public async Task<int> BulkInsertTrackingLogAsync(IEnumerable<TrackingLogRowDto> rows, string connectionString)
+        {
+
+            int inserted = 0;
+            var nowLocal = DateTime.Now;
+            var cdtUnspec = DateTime.SpecifyKind(nowLocal, DateTimeKind.Unspecified);
+
+            await using var conn = new Npgsql.NpgsqlConnection(connectionString);
+            await conn.OpenAsync();
+            await using var tx = await conn.BeginTransactionAsync();
+
+            const string sql = @"
+                INSERT INTO public.tracking_log (tk_num, hp_num, status, cdt)
+                VALUES (BTRIM(@tk), BTRIM(@hp), @status, @cdt);";   
+
+            foreach (var r in rows.Where(r => !string.IsNullOrWhiteSpace(r.TkNum) && !string.IsNullOrWhiteSpace(r.HpNum)))
+            {
+                await using var cmd = new Npgsql.NpgsqlCommand(sql, conn, tx);
+                cmd.Parameters.Add(new Npgsql.NpgsqlParameter("@tk", NpgsqlTypes.NpgsqlDbType.Varchar) { Value = r.TkNum! });
+                cmd.Parameters.Add(new Npgsql.NpgsqlParameter("@hp", NpgsqlTypes.NpgsqlDbType.Varchar) { Value = r.HpNum! });
+                cmd.Parameters.Add(new Npgsql.NpgsqlParameter("@status", NpgsqlTypes.NpgsqlDbType.Integer) { Value = 1 }); // status=1
+                cmd.Parameters.Add(new Npgsql.NpgsqlParameter("@cdt", NpgsqlTypes.NpgsqlDbType.Timestamp) { Value = cdtUnspec });
+
+                var affected = await cmd.ExecuteNonQueryAsync();
+                if (affected > 0) inserted++;
+            }
+
+            await tx.CommitAsync();
+            return inserted;
+        }
+
+        // Functions Upside
     }
 }

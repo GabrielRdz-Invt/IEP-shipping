@@ -1,13 +1,17 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using ExcelDataReader;
+using Microsoft.AspNetCore.Mvc;
 // using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
 using NpgsqlTypes;
 using shipping_app.Models;
 using shipping_app.Repositories;
+using System.ComponentModel.DataAnnotations;
+using System.Data;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+
 
 namespace shipping_app.Controllers
 {
@@ -19,6 +23,8 @@ namespace shipping_app.Controllers
         private readonly IIepCrossingDockShipmentRepository _repo;
         private readonly ILogger<IepCrossingDockShipmentsController> _logger;
 
+        private readonly IConfiguration _config;
+
         public IepCrossingDockShipmentsController(
             IIepCrossingDockShipmentRepository repo,
             ILogger<IepCrossingDockShipmentsController> logger,
@@ -28,6 +34,7 @@ namespace shipping_app.Controllers
             _logger = logger;
             _connectionString = configuration.GetConnectionString("shipping_appCon")
                 ?? throw new InvalidOperationException("Falta la cadena de conexión 'shipping_appCon'.");
+            _config = configuration;
         }
 
         // GET api/IepCrossingDockShipments
@@ -470,6 +477,107 @@ namespace shipping_app.Controllers
             }
 
             return sb.ToString();
+        }
+
+
+        [HttpPost("validate")]
+        public async Task<ActionResult<SecondScanValidateResponseDto>> Validate([FromBody] SecondScanValidateRequestDto request)
+        {
+            // IMPLEMENTADO: Validación de modelo
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // IMPLEMENTADO: Obtener connectionString desde appsettings
+            // var connStr = _config.GetConnectionString("DefaultConnection");
+
+            // IMPLEMENTADO: Llamada al repositorio para validar (hawb/hppartnum en misma fila)
+            bool match = await _repo.ValidateTrackingAndPartAsync(request.TrackingNumber, request.HpPartNum, _connectionString);
+
+            // IMPLEMENTADO: Respuesta estándar
+            return Ok(new SecondScanValidateResponseDto { Match = match });
+        }
+
+        public class SecondScanUploadForm
+        {
+            [Required]
+            public IFormFile File { get; set; } = default!;
+        }
+
+
+
+        [HttpPost("upload-file")]
+        [Consumes("multipart/form-data")]
+        public async Task<ActionResult<object>> UploadExcel([FromForm] SecondScanUploadForm form)
+        {
+            if (form.File == null || form.File.Length == 0)
+                return BadRequest("No file provided.");
+
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+            var rows = new List<TrackingLogRowDto>();
+
+            using var stream = new MemoryStream();
+            await form.File.CopyToAsync(stream);
+            stream.Position = 0;
+            using var reader = ExcelReaderFactory.CreateReader(stream);
+
+            var conf = new ExcelDataSetConfiguration
+            {
+                ConfigureDataTable = _ => new ExcelDataTableConfiguration
+                {
+                    UseHeaderRow = true
+                }
+            };
+
+            var result = reader.AsDataSet(conf);
+            if (result.Tables.Count == 0)
+                return BadRequest("The Excel file has no sheets.");
+            DataTable table = result.Tables[0];
+
+            int idxTk = -1, idxHp = -1;
+            for (int i = 0; i < table.Columns.Count; i++)
+            {
+                var name = table.Columns[i].ColumnName.Trim().ToLowerInvariant();
+                if (name == "bob tracking number") idxTk = i;
+                if (name == "part number") idxHp = i;
+            }
+
+            if (idxTk < 0 || idxHp < 0)
+                return BadRequest("Required columns not found: 'BoB Tracking Number' and/or 'Part Number'.");
+
+            foreach (DataRow dr in table.Rows)
+            {
+                var tk = dr[idxTk]?.ToString()?.Trim();
+                var hp = dr[idxHp]?.ToString()?.Trim();
+
+                if (!string.IsNullOrWhiteSpace(tk) && !string.IsNullOrWhiteSpace(hp))
+                    rows.Add(new TrackingLogRowDto { TkNum = tk, HpNum = hp });
+            }
+
+            var inserted = await _repo.BulkInsertTrackingLogAsync(rows, _connectionString);
+
+            return Ok(new { inserted, totalRead = rows.Count });
+        }
+
+
+        public class ValidateRequest
+        {
+            // IMPLEMENTADO: payload mínimo (tracking + hp)
+            public string TrackingNumber { get; set; } = string.Empty;
+            public string HpPartNum { get; set; } = string.Empty;
+        }
+
+        public class ValidateResponse
+        {
+            // IMPLEMENTADO: 'pass' / 'failed' para el frontend
+            public bool Match { get; set; }
+            public string Result { get; set; } = "failed";
+        }
+
+        [HttpPost("validate-bool")]
+        public async Task<ActionResult<ValidateResponse>> ValidateBool([FromBody] ValidateRequest request)
+        {
+            bool match = await _repo.ValidateTrackingAndPartAsync(request.TrackingNumber, request.HpPartNum, _connectionString);
+            return Ok(new ValidateResponse { Match = match, Result = match ? "pass" : "failed" });
         }
 
 

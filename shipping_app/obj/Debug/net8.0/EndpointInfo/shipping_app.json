@@ -321,6 +321,137 @@
         }
       }
     },
+    "/api/IepCrossingDockShipments/validate": {
+      "post": {
+        "tags": [
+          "IepCrossingDockShipments"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SecondScanValidateRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SecondScanValidateRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SecondScanValidateRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecondScanValidateResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecondScanValidateResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecondScanValidateResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/IepCrossingDockShipments/upload-file": {
+      "post": {
+        "tags": [
+          "IepCrossingDockShipments"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "File"
+                ],
+                "type": "object",
+                "properties": {
+                  "File": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "File": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/IepCrossingDockShipments/validate-bool": {
+      "post": {
+        "tags": [
+          "IepCrossingDockShipments"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidateResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidateResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidateResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/WeatherForecast": {
       "get": {
         "tags": [
@@ -562,6 +693,10 @@
             "type": "string",
             "nullable": true
           },
+          "hpPartNum": {
+            "type": "string",
+            "nullable": true
+          },
           "iecPartNum": {
             "type": "string",
             "nullable": true
@@ -607,6 +742,33 @@
         },
         "additionalProperties": false
       },
+      "SecondScanValidateRequestDto": {
+        "required": [
+          "hpPartNum",
+          "trackingNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "trackingNumber": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "hpPartNum": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SecondScanValidateResponseDto": {
+        "type": "object",
+        "properties": {
+          "match": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "StatusUpdateDto": {
         "type": "object",
         "properties": {
@@ -621,6 +783,33 @@
           },
           "setUdtFromShipOutDate": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ValidateRequest": {
+        "type": "object",
+        "properties": {
+          "trackingNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "hpPartNum": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ValidateResponse": {
+        "type": "object",
+        "properties": {
+          "match": {
+            "type": "boolean"
+          },
+          "result": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

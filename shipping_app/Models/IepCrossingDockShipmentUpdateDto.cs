@@ -5,6 +5,7 @@
         public string? Carrier { get; set; }
         public string? HAWB { get; set; }
         public string? InvRefPo { get; set; }
+        public string? HpPartNum { get; set; }
         public string? IecPartNum { get; set; }
         public int? Qty { get; set; }
         public string? Bulks { get; set; }

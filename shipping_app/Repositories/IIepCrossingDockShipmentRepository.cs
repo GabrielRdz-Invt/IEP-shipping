@@ -24,5 +24,9 @@ namespace shipping_app.Repositories
         Task<string> GenerateNextIdAsync(DateTime nowLocal, string connectionString);
 
         Task<List<object>> GetReportRowsAsync(string dateColumn, DateTime from, DateTime to, string connectionString);
+
+        Task<bool> ValidateTrackingAndPartAsync (string TrackingNumber, string hpPartNum, string connectionString);
+
+        Task<int> BulkInsertTrackingLogAsync(IEnumerable<TrackingLogRowDto> rows, string connectionString);
     }
 }
