@@ -16,5 +16,6 @@
         public string? Bin { get; set; }
         public string? Remark { get; set; }
         public string? Operator { get; set; }
+        public string? Status { get; set; }
     }
 }

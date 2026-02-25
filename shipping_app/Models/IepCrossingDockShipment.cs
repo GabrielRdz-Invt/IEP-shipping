@@ -313,56 +313,66 @@ namespace shipping_app.Models
 
         public async Task<bool> UpdateAsync(string id, IepCrossingDockShipmentUpdateDto dto, string connectionString)
         {
-            const string sql = @"
-            UPDATE public.iep_crossing_dock_shipment
-            SET carrier = @Carrier,
-                hawb = @HAWB,
-                invrefpo = @InvRefPo,
-                hppartnum = @HpPartNum,
-                iecpartnum = @IecPartNum,
-                qty = @Qty,
-                bulks = @Bulks,
-                boxplt = @BoxPlt,
-                rcvddate = @RcvdDate,
-                weight = @Weight,
-                shipper = @Shipper,
-                bin = @Bin,
-                remark = @Remark,
-                operator_name = @Operator,
-                udt = @Udt
-            WHERE id = @IdTrim;";
+            try
+            {
+                const string sql = @"
+                UPDATE public.iep_crossing_dock_shipment
+                SET carrier = @Carrier,
+                    hawb = @HAWB,
+                    invrefpo = @InvRefPo,
+                    hppartnum = @HpPartNum,
+                    iecpartnum = @IecPartNum,
+                    qty = @Qty,
+                    bulks = @Bulks,
+                    boxplt = @BoxPlt,
+                    rcvddate = @RcvdDate,
+                    weight = @Weight,
+                    shipper = @Shipper,
+                    bin = @Bin,
+                    remark = @Remark,
+                    operator_name = @Operator,
+                    udt = @Udt,
+                    status = @Status
+                WHERE id = @IdTrim;";
 
 
-            using var conn = new NpgsqlConnection(connectionString);
-            await conn.OpenAsync();
-            using var cmd = new NpgsqlCommand(sql, conn);
+                using var conn = new NpgsqlConnection(connectionString);
+                await conn.OpenAsync();
+                using var cmd = new NpgsqlCommand(sql, conn);
 
-            cmd.Parameters.Add("@IdTrim", NpgsqlDbType.Varchar, 100).Value = (id ?? string.Empty).Trim();
-            cmd.Parameters.Add("@Carrier", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Carrier ?? DBNull.Value;
-            cmd.Parameters.Add("@HAWB", NpgsqlDbType.Varchar, 50).Value = (object?)dto.HAWB ?? DBNull.Value;
-            cmd.Parameters.Add("@InvRefPo", NpgsqlDbType.Varchar, 50).Value = (object?)dto.InvRefPo ?? DBNull.Value;
-            cmd.Parameters.Add("@HpPartNum", NpgsqlDbType.Varchar, 50).Value = (object?)dto.HpPartNum ?? DBNull.Value;
-            cmd.Parameters.Add("@IecPartNum", NpgsqlDbType.Varchar, 50).Value = (object?)dto.IecPartNum ?? DBNull.Value;
-            cmd.Parameters.Add("@Qty", NpgsqlDbType.Integer).Value = (object?)dto.Qty ?? DBNull.Value;
-            cmd.Parameters.Add("@Bulks", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Bulks ?? DBNull.Value;
-            cmd.Parameters.Add("@BoxPlt", NpgsqlDbType.Varchar, 50).Value = (object?)dto.BoxPlt ?? DBNull.Value;
+                cmd.Parameters.Add("@IdTrim", NpgsqlDbType.Varchar, 100).Value = (id ?? string.Empty).Trim();
+                cmd.Parameters.Add("@Carrier", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Carrier ?? DBNull.Value;
+                cmd.Parameters.Add("@HAWB", NpgsqlDbType.Varchar, 50).Value = (object?)dto.HAWB ?? DBNull.Value;
+                cmd.Parameters.Add("@InvRefPo", NpgsqlDbType.Varchar, 50).Value = (object?)dto.InvRefPo ?? DBNull.Value;
+                cmd.Parameters.Add("@HpPartNum", NpgsqlDbType.Varchar, 50).Value = (object?)dto.HpPartNum ?? DBNull.Value;
+                cmd.Parameters.Add("@IecPartNum", NpgsqlDbType.Varchar, 50).Value = (object?)dto.IecPartNum ?? DBNull.Value;
+                cmd.Parameters.Add("@Qty", NpgsqlDbType.Integer).Value = (object?)dto.Qty ?? DBNull.Value;
+                cmd.Parameters.Add("@Bulks", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Bulks ?? DBNull.Value;
+                cmd.Parameters.Add("@BoxPlt", NpgsqlDbType.Varchar, 50).Value = (object?)dto.BoxPlt ?? DBNull.Value;
 
-            cmd.Parameters.Add("@RcvdDate", NpgsqlDbType.Timestamp).Value =
-                dto.RcvdDate.HasValue
-                ? DateTime.SpecifyKind(dto.RcvdDate.Value, DateTimeKind.Unspecified)
-                : (object)DBNull.Value;
+                cmd.Parameters.Add("@RcvdDate", NpgsqlDbType.Timestamp).Value =
+                    dto.RcvdDate.HasValue
+                    ? DateTime.SpecifyKind(dto.RcvdDate.Value, DateTimeKind.Unspecified)
+                    : (object)DBNull.Value;
 
-            cmd.Parameters.Add("@Weight", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Weight ?? DBNull.Value;
-            cmd.Parameters.Add("@Shipper", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Shipper ?? DBNull.Value;
-            cmd.Parameters.Add("@Bin", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Bin ?? DBNull.Value;
-            cmd.Parameters.Add("@Remark", NpgsqlDbType.Varchar, 250).Value = (object?)dto.Remark ?? DBNull.Value;
-            cmd.Parameters.Add("@Operator", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Operator ?? DBNull.Value;
+                cmd.Parameters.Add("@Weight", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Weight ?? DBNull.Value;
+                cmd.Parameters.Add("@Shipper", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Shipper ?? DBNull.Value;
+                cmd.Parameters.Add("@Bin", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Bin ?? DBNull.Value;
+                cmd.Parameters.Add("@Remark", NpgsqlDbType.Varchar, 250).Value = (object?)dto.Remark ?? DBNull.Value;
+                cmd.Parameters.Add("@Operator", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Operator ?? DBNull.Value;
 
-            var udtUnspec = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Unspecified);
-            cmd.Parameters.Add("@Udt", NpgsqlDbType.Timestamp).Value = udtUnspec;
+                var udtUnspec = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Unspecified);
+                cmd.Parameters.Add("@Udt", NpgsqlDbType.Timestamp).Value = udtUnspec;
+                cmd.Parameters.Add("@Status", NpgsqlDbType.Varchar, 50).Value = (object?)dto.Status ?? DBNull.Value;
 
-            var affected = await cmd.ExecuteNonQueryAsync();
-            return affected > 0;
+                var affected = await cmd.ExecuteNonQueryAsync();
+                return affected > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex);
+                throw;
+            }
         }
 
 
@@ -418,6 +428,12 @@ namespace shipping_app.Models
                 "rcvd" => "rcvddate"   // por defecto
             };
 
+            string statusExpr = (dateField ?? "rcvd").Trim().ToLowerInvariant() switch
+            {
+                "shipout" => "2",
+                "rcvd" => "1"   // por defecto
+            };
+
             var fromUnspec = DateTime.SpecifyKind(from, DateTimeKind.Unspecified);
             var toUnspec = DateTime.SpecifyKind(to, DateTimeKind.Unspecified);
 
@@ -441,6 +457,7 @@ namespace shipping_app.Models
             WHERE {dateExpr} IS NOT NULL
                 AND {dateExpr} >= @from
                 AND {dateExpr} <= @to
+                AND status = {statusExpr}
             ORDER BY {dateExpr} ASC, id ASC;";
 
             using var conn = new NpgsqlConnection(connectionString);

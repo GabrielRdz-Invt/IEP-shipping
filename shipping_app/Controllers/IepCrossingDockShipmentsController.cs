@@ -296,9 +296,19 @@ namespace shipping_app.Controllers
                     "shipout" => "ShipOutDate",
                     _ => "RCVDDATE"
                 };
+                string status = "1";
+                if (col == "RCVDDATE")
+                {
+                    status = "1";
+                }
+                else if (col == "ShipOutDate")
+                {
+                    status = "2";
+                }
+
 
                 // [CAMBIO] Consulta con parámetros (ADO.NET)
-                var rows = await GetReportRowsAsync(col, fromBound, toBound, _connectionString);
+                var rows = await GetReportRowsAsync(col, fromBound, toBound, status, _connectionString);
 
                 return Ok(rows); // JSON
             }
@@ -352,8 +362,17 @@ namespace shipping_app.Controllers
                 var fromUnspec = DateTime.SpecifyKind(fromBound, DateTimeKind.Unspecified);
                 var toUnspec = DateTime.SpecifyKind(toBound, DateTimeKind.Unspecified);
 
+                string status = "1";
+                if (col == "RCVDDATE")
+                {
+                    status = "1";
+                }
+                else if (col == "shipoutdate")
+                {
+                    status = "2";
+                }
                 // [CAMBIO] Pasar Unspecified al helper
-                var rows = await GetReportRowsAsync(col, fromUnspec, toUnspec, _connectionString);
+                var rows = await GetReportRowsAsync(col, fromUnspec, toUnspec, status, _connectionString);
 
                 var csv = BuildCsv(rows);
 
@@ -380,11 +399,12 @@ namespace shipping_app.Controllers
         }
 
         // [CAMBIO] Helper ADO.NET para obtener filas del reporte
-        private async Task<List<object>> GetReportRowsAsync(string dateColumn, DateTime from, DateTime to, string connectionString)
+        private async Task<List<object>> GetReportRowsAsync(string dateColumn, DateTime from, DateTime to, string status, string connectionString)
         {
 
             var list = new List<object>();
-
+            // Console.WriteLine($"DEBUG: GetReportRowsAsync - dateColumn={dateColumn}, from={from} (Kind={from.Kind}), status={status},to={to} (Kind={to.Kind})");
+            
             var sql = $@"
             SELECT
                 id,
@@ -400,9 +420,9 @@ namespace shipping_app.Controllers
                 shipoutdate,
                 operator_name
             FROM public.iep_crossing_dock_shipment
-            WHERE {dateColumn} IS NOT NULL
-              AND {dateColumn} >= @from
+            WHERE {dateColumn} >= @from
               AND {dateColumn} <= @to
+              AND status = '{status}'
             ORDER BY {dateColumn} ASC, id ASC;";
 
             using var conn = new NpgsqlConnection(connectionString);
@@ -458,11 +478,23 @@ namespace shipping_app.Controllers
                     var s = v.Replace("\"", "\"\"");
                     return needsQuotes ? $"\"{s}\"" : s;
                 }
-
+                string status;
+                if (r.status == "1")
+                {
+                    status = "Received";
+                }
+                else if (r.status == "2")
+                {
+                    status = "Shipped Out";
+                }
+                else
+                {
+                    status = "empty";
+                }
                 sb.AppendLine(string.Join(",", new[]
                 {
                     Esc(r.id),
-                    Esc(r.status),
+                    Esc(status),    
                     Esc(r.hawb),
                     Esc(r.invRefPo),
                     Esc(r.iecPartNum),
