@@ -67,7 +67,6 @@ C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_a
 C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\obj\Debug\net8.0\staticwebassets.build.json.cache
 C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\obj\Debug\net8.0\staticwebassets.development.json
 C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\obj\Debug\net8.0\staticwebassets.build.endpoints.json
-C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\obj\Debug\net8.0\shipping.DBFF64B4.Up2Date
 C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\obj\Debug\net8.0\shipping_app.dll
 C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\obj\Debug\net8.0\refint\shipping_app.dll
@@ -89,3 +88,4 @@ C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_a
 C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\bin\Debug\net8.0\System.Diagnostics.DiagnosticSource.dll
 C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\bin\Debug\net8.0\ExcelDataReader.dll
 C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\bin\Debug\net8.0\ExcelDataReader.DataSet.dll
+C:\Users\IMX113735\Documents\Visual Studio 2022\Projects\shipping_app\shipping_app\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

@@ -16,7 +16,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowClients", policy =>
     {
         policy
-            .WithOrigins("http://localhost:3000", "http://localhost:4200", "http://localhost:5173")
+            .WithOrigins("http://localhost:3000", 
+                "http://localhost:4200", 
+                "http://localhost:5173", 
+                "https://iep-app-n.iec.inventec:446")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
